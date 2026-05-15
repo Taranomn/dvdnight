@@ -314,8 +314,9 @@ export async function addMovieCommentAction(tmdbId: number, formData: FormData) 
   const user = await requireUser();
   const body = String(formData.get("body") ?? "");
   const ratingValue = String(formData.get("rating") ?? "");
+  const parentId = String(formData.get("parentId") ?? "");
   const rating = ratingValue ? Number(ratingValue) : null;
-  await createMovieComment(user.id, tmdbId, body, rating);
+  await createMovieComment(user.id, tmdbId, body, rating, parentId || null);
   revalidatePath(`/movies/${tmdbId}`);
 }
 

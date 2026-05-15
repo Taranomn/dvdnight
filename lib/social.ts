@@ -16,6 +16,12 @@ export type MovieComment = {
   profiles?: Profile;
 };
 
+export type MovieCommunityStats = {
+  watchedCount: number;
+  averageRating: number | null;
+  ratingCount: number;
+};
+
 export type DirectMessage = {
   id: string;
   sender_id: string;
@@ -33,21 +39,58 @@ export type MessageThread = {
   unreadCount: number;
 };
 
-export async function getMovieComments(tmdbId: number) {
+export async function getStoredMovieIdForTmdb(tmdbId: number) {
   const admin = createAdminClient();
   const { data: movie } = await admin.from("movies").select("id").eq("tmdb_id", tmdbId).maybeSingle();
-  if (!movie) return [];
+  return (movie?.id as string | undefined) ?? null;
+}
+
+export async function getMovieComments(tmdbId: number) {
+  const admin = createAdminClient();
+  const movieId = await getStoredMovieIdForTmdb(tmdbId);
+  if (!movieId) return [];
 
   const { data, error } = await admin
     .from("movie_comments")
     .select("*, profiles(*)")
-    .eq("movie_id", movie.id)
+    .eq("movie_id", movieId)
     .order("created_at", { ascending: false });
   if (error) throw new Error(error.message);
   return (data ?? []) as MovieComment[];
 }
 
-export async function createMovieComment(userId: string, tmdbId: number, body: string, rating?: number | null) {
+export async function getMovieCommunityStats(tmdbId: number): Promise<MovieCommunityStats> {
+  const admin = createAdminClient();
+  const movieId = await getStoredMovieIdForTmdb(tmdbId);
+  if (!movieId) return { watchedCount: 0, averageRating: null, ratingCount: 0 };
+
+  const [{ count: watchedCount }, { data: ratings }] = await Promise.all([
+    admin
+      .from("watchlist")
+      .select("id", { count: "exact", head: true })
+      .eq("movie_id", movieId)
+      .eq("status", "watched"),
+    admin
+      .from("movie_comments")
+      .select("rating")
+      .eq("movie_id", movieId)
+      .not("rating", "is", null),
+  ]);
+  const numericRatings = (ratings ?? [])
+    .map((item) => Number(item.rating))
+    .filter((rating) => Number.isFinite(rating));
+  const averageRating = numericRatings.length
+    ? Number((numericRatings.reduce((sum, rating) => sum + rating, 0) / numericRatings.length).toFixed(1))
+    : null;
+
+  return {
+    watchedCount: watchedCount ?? 0,
+    averageRating,
+    ratingCount: numericRatings.length,
+  };
+}
+
+export async function createMovieComment(userId: string, tmdbId: number, body: string, rating?: number | null, parentId?: string | null) {
   const text = body.trim();
   if (!text) return;
   const movie = await upsertMovieByTmdbId(tmdbId);
@@ -57,6 +100,7 @@ export async function createMovieComment(userId: string, tmdbId: number, body: s
     movie_id: movie.id,
     body: text.slice(0, 1200),
     rating: typeof rating === "number" && Number.isFinite(rating) ? rating : null,
+    parent_id: parentId || null,
   });
   if (error) throw new Error(error.message);
 }

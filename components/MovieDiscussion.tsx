@@ -1,9 +1,15 @@
 import Link from "next/link";
-import { MessageCircle, Star } from "lucide-react";
+import { MessageCircle, Reply, Star } from "lucide-react";
 import { addMovieCommentAction } from "@/lib/actions";
 import type { MovieComment } from "@/lib/social";
 
 export function MovieDiscussion({ tmdbId, comments, signedIn }: { tmdbId: number; comments: MovieComment[]; signedIn: boolean }) {
+  const topLevel = comments.filter((comment) => !comment.parent_id);
+  const repliesByParent = comments.reduce<Record<string, MovieComment[]>>((groups, comment) => {
+    if (comment.parent_id) groups[comment.parent_id] = [...(groups[comment.parent_id] ?? []), comment];
+    return groups;
+  }, {});
+
   return (
     <section className="glass rounded-3xl p-5 md:p-7">
       <div className="flex items-center gap-3">
@@ -39,7 +45,7 @@ export function MovieDiscussion({ tmdbId, comments, signedIn }: { tmdbId: number
       )}
 
       <div className="mt-6 space-y-3">
-        {comments.map((comment) => (
+        {topLevel.map((comment) => (
           <article key={comment.id} className="rounded-3xl border border-white/10 bg-white/[0.035] p-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
@@ -54,9 +60,41 @@ export function MovieDiscussion({ tmdbId, comments, signedIn }: { tmdbId: number
               ) : null}
             </div>
             <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-zinc-300">{comment.body}</p>
+            {signedIn ? (
+              <details className="mt-3">
+                <summary className="inline-flex cursor-pointer items-center gap-2 text-sm font-semibold text-[#ff3b5c]">
+                  <Reply className="h-4 w-4" />
+                  Reply
+                </summary>
+                <form action={addMovieCommentAction.bind(null, tmdbId)} className="mt-3 flex gap-2">
+                  <input type="hidden" name="parentId" value={comment.id} />
+                  <input
+                    name="body"
+                    required
+                    maxLength={800}
+                    placeholder={`Reply to ${comment.profiles?.display_name || comment.profiles?.username || "this review"}...`}
+                    className="h-11 min-w-0 flex-1 rounded-2xl border border-white/10 bg-white/[0.055] px-4 text-sm outline-none focus:border-[#ff3b5c]/60"
+                  />
+                  <button className="secondary-button px-4 py-2 text-sm">Send</button>
+                </form>
+              </details>
+            ) : null}
+            {repliesByParent[comment.id]?.length ? (
+              <div className="mt-4 space-y-2 border-l border-white/10 pl-3">
+                {repliesByParent[comment.id].map((reply) => (
+                  <div key={reply.id} className="rounded-2xl bg-white/[0.035] p-3">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="text-sm font-bold">{reply.profiles?.display_name || reply.profiles?.username || "Movie fan"}</div>
+                      <div className="text-xs text-zinc-500">{new Date(reply.created_at).toLocaleDateString()}</div>
+                    </div>
+                    <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-zinc-300">{reply.body}</p>
+                  </div>
+                ))}
+              </div>
+            ) : null}
           </article>
         ))}
-        {!comments.length ? <p className="text-sm text-zinc-500">No comments yet. Be the first to start the conversation.</p> : null}
+        {!topLevel.length ? <p className="text-sm text-zinc-500">No comments yet. Be the first to start the conversation.</p> : null}
       </div>
     </section>
   );

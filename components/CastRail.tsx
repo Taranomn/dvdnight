@@ -15,22 +15,22 @@ export function CastRail({ movie }: { movie: FullMovieData }) {
       .filter((member) => member.id !== director?.id)
       .map((member) => ({ id: member.id, name: member.name, character: member.character || "Cast", profile_path: member.profile_path })),
   ];
-  const visiblePeople = expanded ? people : people.slice(0, 8);
+  const visiblePeople = expanded ? people : people.slice(0, 6);
 
   return (
-    <aside className="glass self-start rounded-3xl p-5 lg:sticky lg:top-6">
+    <aside className="glass self-start rounded-3xl p-4 md:p-5">
       <h2 className="text-2xl font-bold">Cast</h2>
       <p className="mt-1 text-sm text-zinc-500">Director first, then featured performers.</p>
-      <div className="mt-6 grid grid-cols-2 gap-4">
+      <div className="mt-5 grid grid-cols-2 gap-3">
         {visiblePeople.map((person) => (
           <Link
             key={`${person.id}-${person.character}`}
             href={`/people/${person.id}`}
-            className="rounded-3xl border border-white/10 bg-white/[0.035] p-3 transition hover:-translate-y-1 hover:border-[#ff3b5c]/40"
+            className="rounded-2xl border border-white/10 bg-white/[0.035] p-2.5 transition hover:-translate-y-1 hover:border-[#ff3b5c]/40"
           >
-            <div className="relative mx-auto h-24 w-24 overflow-hidden rounded-full bg-white/[0.05]">
+            <div className="relative mx-auto h-20 w-20 overflow-hidden rounded-full bg-white/[0.05]">
               {person.profile_path ? (
-                <Image src={`https://image.tmdb.org/t/p/w500${person.profile_path}`} alt={person.name} fill sizes="96px" className="object-cover" />
+                <Image src={`https://image.tmdb.org/t/p/w500${person.profile_path}`} alt={person.name} fill sizes="80px" className="object-cover" />
               ) : (
                 <div className="flex h-full items-center justify-center text-zinc-600">
                   <UserRound className="h-9 w-9" />
@@ -42,9 +42,9 @@ export function CastRail({ movie }: { movie: FullMovieData }) {
           </Link>
         ))}
       </div>
-      {people.length > 8 ? (
+      {people.length > 6 ? (
         <button onClick={() => setExpanded((value) => !value)} className="secondary-button mt-5 w-full px-4 py-3 text-sm">
-          {expanded ? "Show less" : `See more cast (${people.length - 8})`}
+          {expanded ? "Show less" : `See more cast (${people.length - 6})`}
         </button>
       ) : null}
     </aside>

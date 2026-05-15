@@ -2,8 +2,7 @@
 
 import Image from "next/image";
 import { useState } from "react";
-import type { DisplayMovie, FullMovieData } from "@/types/movie";
-import { MovieGrid } from "@/components/MovieGrid";
+import type { FullMovieData } from "@/types/movie";
 import { TrailerEmbed } from "@/components/TrailerEmbed";
 
 const TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p/w500";
@@ -17,7 +16,7 @@ function formatMoney(value?: number | null) {
   }).format(value);
 }
 
-export function MovieDetailTabs({ movie, similar }: { movie: FullMovieData; similar: DisplayMovie[] }) {
+export function MovieDetailTabs({ movie }: { movie: FullMovieData }) {
   const [showPhotos, setShowPhotos] = useState(false);
   const [showVideos, setShowVideos] = useState(false);
   const youtubeVideos = movie.videos.filter((video) => video.site === "YouTube");
@@ -99,20 +98,6 @@ export function MovieDetailTabs({ movie, similar }: { movie: FullMovieData; simi
         ) : !photos.length ? (
           <p className="mt-6 text-zinc-400">Photos not available.</p>
         ) : null}
-      </section>
-
-      <section className="glass rounded-3xl p-5 md:p-7">
-        <h2 className="text-2xl font-bold">Similar Movies</h2>
-        <div className="mt-6">
-          {similar.length ? (
-            <MovieGrid
-              movies={similar.slice(0, 12)}
-              className="gap-y-14 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4"
-            />
-          ) : (
-            <p className="text-zinc-400">No similar movies found.</p>
-          )}
-        </div>
       </section>
     </div>
   );

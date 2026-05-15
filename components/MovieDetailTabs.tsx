@@ -19,6 +19,7 @@ function formatMoney(value?: number | null) {
 
 export function MovieDetailTabs({ movie, similar }: { movie: FullMovieData; similar: DisplayMovie[] }) {
   const [showPhotos, setShowPhotos] = useState(false);
+  const [showVideos, setShowVideos] = useState(false);
   const youtubeVideos = movie.videos.filter((video) => video.site === "YouTube");
   const photos = [...movie.images.backdrops, ...movie.images.posters, ...movie.images.logos].filter((image) => image.file_path);
 
@@ -50,16 +51,29 @@ export function MovieDetailTabs({ movie, similar }: { movie: FullMovieData; simi
       </section>
 
       <section className="glass rounded-3xl p-5 md:p-7">
-        <h2 className="text-2xl font-bold">Videos</h2>
-        <div className="mt-6 grid gap-4 md:grid-cols-2">
-          {youtubeVideos.map((video) => (
-            <div key={video.key} className="rounded-3xl border border-white/10 bg-white/[0.035] p-4">
-              <h3 className="mb-3 font-bold">{video.name ?? video.type}</h3>
-              <TrailerEmbed trailerKey={video.key} className="w-full px-4 py-3" />
-            </div>
-          ))}
-          {!youtubeVideos.length ? <p className="text-zinc-400">Trailer not available.</p> : null}
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <h2 className="text-2xl font-bold">Videos</h2>
+            <p className="mt-1 text-sm text-zinc-500">Trailers, teasers, clips, and featurettes from TMDB.</p>
+          </div>
+          {youtubeVideos.length ? (
+            <button onClick={() => setShowVideos((value) => !value)} className="secondary-button px-4 py-3 text-sm">
+              {showVideos ? "Hide videos" : `Show videos (${youtubeVideos.length})`}
+            </button>
+          ) : null}
         </div>
+        {showVideos && youtubeVideos.length ? (
+          <div className="mt-6 grid gap-4 md:grid-cols-2">
+            {youtubeVideos.map((video) => (
+              <div key={video.key} className="rounded-3xl border border-white/10 bg-white/[0.035] p-4">
+                <h3 className="mb-3 font-bold">{video.name ?? video.type}</h3>
+                <TrailerEmbed trailerKey={video.key} className="w-full px-4 py-3" />
+              </div>
+            ))}
+          </div>
+        ) : !youtubeVideos.length ? (
+          <p className="mt-6 text-zinc-400">Trailer not available.</p>
+        ) : null}
       </section>
 
       <section className="glass rounded-3xl p-5 md:p-7">

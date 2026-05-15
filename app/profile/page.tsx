@@ -1,4 +1,5 @@
-import { updateProfileAction } from "@/lib/actions";
+import { LogOut } from "lucide-react";
+import { logoutAction, updateProfileAction } from "@/lib/actions";
 import { ProfileImageUploader } from "@/components/ProfileImageUploader";
 import { getFriends } from "@/lib/friends";
 import { createServerSupabaseClient, requireUser } from "@/lib/supabase/server";
@@ -17,12 +18,20 @@ export default async function ProfilePage() {
   return (
     <div className="mx-auto max-w-5xl px-4 md:px-8">
       <section className="glass rounded-[2rem] p-6 md:p-8">
-        <div className="flex flex-wrap items-center gap-5">
-          <ProfileImageUploader userId={user.id} avatarUrl={profile?.avatar_url} />
-          <div>
-            <h1 className="text-4xl font-black">{profile?.display_name || "Movie fan"}</h1>
-            <p className="mt-1 text-zinc-400">@{profile?.username || "username"}</p>
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-wrap items-center gap-5">
+            <ProfileImageUploader userId={user.id} avatarUrl={profile?.avatar_url} />
+            <div>
+              <h1 className="text-4xl font-black">{profile?.display_name || "Movie fan"}</h1>
+              <p className="mt-1 text-zinc-400">@{profile?.username || "username"}</p>
+            </div>
           </div>
+          <form action={logoutAction} className="w-full sm:w-auto">
+            <button className="secondary-button h-12 w-full px-5 text-sm sm:w-auto" type="submit">
+              <LogOut className="h-4 w-4" />
+              Log out
+            </button>
+          </form>
         </div>
         <div className="mt-8 grid gap-4 sm:grid-cols-3">
           <div className="rounded-3xl border border-white/10 bg-white/[0.035] p-5">

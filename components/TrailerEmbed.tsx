@@ -22,11 +22,11 @@ export function TrailerEmbed({ trailerKey, className }: { trailerKey?: string | 
         Watch Trailer
       </button>
       {open ? (
-        <div className="trailer-backdrop fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-md">
-          <div className="trailer-forward glass relative w-full max-w-5xl rounded-3xl p-3">
+        <div className="trailer-backdrop fixed inset-0 z-[80] flex items-center justify-center bg-black/85 p-3 backdrop-blur-md sm:p-6">
+          <div className="trailer-forward glass relative w-full max-w-5xl rounded-3xl p-2 sm:p-3">
             <button
               onClick={() => setOpen(false)}
-              className="absolute -right-3 -top-3 rounded-full bg-white p-2 text-black"
+              className="absolute -right-2 -top-2 z-10 rounded-full bg-white p-2 text-black sm:-right-3 sm:-top-3"
               aria-label="Close trailer"
             >
               <X className="h-5 w-5" />

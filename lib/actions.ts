@@ -5,6 +5,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createServerSupabaseClient, requireUser } from "@/lib/supabase/server";
 import { acceptFriendRequest, declineFriendRequest, removeFriend, sendFriendRequest } from "@/lib/friends";
+import { getCommonWatchlist, pickHighestRatedMovie, pickRandomMovie } from "@/lib/match";
 import { upsertMovieByTmdbId } from "@/lib/movies";
 import { addToWatchlist, removeFromWatchlist, saveMovieInteractionByTmdbId, setWatchlistStatus, toggleMovieLike } from "@/lib/watchlist";
 import { updateUserTasteProfile } from "@/lib/recommendations";
@@ -324,6 +325,57 @@ export async function sendDirectMessageAction(receiverId: string, formData: Form
   const user = await requireUser();
   const body = String(formData.get("body") ?? "");
   await sendDirectMessage(user.id, receiverId, body);
-  revalidatePath(`/profile/${receiverId}`);
+  revalidatePath(`/messages/${receiverId}`);
   revalidatePath("/messages");
+}
+
+export async function sendRandomCommonMovieAction(receiverId: string) {
+  const user = await requireUser();
+  const common = await getCommonWatchlist(user.id, receiverId);
+  const movie = pickRandomMovie(common);
+  const body = movie
+    ? `Random pick for us: ${movie.title}${movie.release_year ? ` (${movie.release_year})` : ""}\n/movies/${movie.tmdb_id}`
+    : "We do not have common watchlist movies yet. Let's add more and match again.";
+  await sendDirectMessage(user.id, receiverId, body);
+  revalidatePath(`/messages/${receiverId}`);
+  revalidatePath("/messages");
+}
+
+export async function sendHighestRatedCommonMovieAction(receiverId: string) {
+  const user = await requireUser();
+  const common = await getCommonWatchlist(user.id, receiverId);
+  const movie = pickHighestRatedMovie(common);
+  const body = movie
+    ? `Highest-rated common pick: ${movie.title}${movie.release_year ? ` (${movie.release_year})` : ""}\n/movies/${movie.tmdb_id}`
+    : "We do not have a highest-rated common movie yet. Let's build our watchlists first.";
+  await sendDirectMessage(user.id, receiverId, body);
+  revalidatePath(`/messages/${receiverId}`);
+  revalidatePath("/messages");
+}
+
+export async function sendMatchInviteAction(receiverId: string) {
+  const user = await requireUser();
+  await sendDirectMessage(user.id, receiverId, `Let's compare our watchlists:\n/match/${receiverId}`);
+  revalidatePath(`/messages/${receiverId}`);
+  revalidatePath("/messages");
+}
+
+export async function sendWatchlistInviteAction(receiverId: string) {
+  const user = await requireUser();
+  await sendDirectMessage(user.id, receiverId, `Check out my movie profile and watchlist:\n/profile/${user.id}`);
+  revalidatePath(`/messages/${receiverId}`);
+  revalidatePath("/messages");
+}
+
+export async function shareMovieToFriendAction(receiverId: string, tmdbId: number) {
+  const user = await requireUser();
+  const movie = await upsertMovieByTmdbId(tmdbId);
+  await sendDirectMessage(
+    user.id,
+    receiverId,
+    `I think we should watch ${movie.title}${movie.release_year ? ` (${movie.release_year})` : ""}.\n/movies/${movie.tmdb_id}`,
+  );
+  revalidatePath(`/messages/${receiverId}`);
+  revalidatePath("/messages");
+  revalidatePath(`/movies/${tmdbId}`);
 }

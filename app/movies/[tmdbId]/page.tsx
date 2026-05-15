@@ -5,7 +5,9 @@ import { MovieCommunityStats } from "@/components/MovieCommunityStats";
 import { MovieDiscussion } from "@/components/MovieDiscussion";
 import { MovieDetailHero } from "@/components/MovieDetailHero";
 import { MovieDetailTabs } from "@/components/MovieDetailTabs";
+import { ShareMoviePanel } from "@/components/ShareMoviePanel";
 import { SimilarMoviesPanel } from "@/components/SimilarMoviesPanel";
+import { getFriends } from "@/lib/friends";
 import { enrichMoviesWithRatings, getFullMovieData } from "@/lib/movies";
 import { getMovieComments, getMovieCommunityStats } from "@/lib/social";
 import { getSessionUser } from "@/lib/supabase/server";
@@ -34,12 +36,13 @@ export default async function MovieDetailPage({ params }: { params: Promise<{ tm
   }
 
   const user = await getSessionUser();
-  const [watchlistState, liked, similarRaw, comments, stats] = await Promise.all([
+  const [watchlistState, liked, similarRaw, comments, stats, friends] = await Promise.all([
     isMovieInWatchlist(user?.id, id),
     isMovieLiked(user?.id, id),
     getSmartSimilarMovies(id).catch(() => []),
     getMovieComments(id).catch(() => []),
     getMovieCommunityStats(id).catch(() => ({ watchedCount: 0, averageRating: null, ratingCount: 0 })),
+    user ? getFriends(user.id).catch(() => []) : Promise.resolve([]),
   ]);
   const similar = await enrichMoviesWithRatings(similarRaw, 12);
 
@@ -54,7 +57,10 @@ export default async function MovieDetailPage({ params }: { params: Promise<{ tm
           <CastRail movie={movie} />
         </div>
       </section>
-      <MovieCommunityStats stats={stats} />
+      <section className="grid gap-6 xl:grid-cols-[minmax(0,0.85fr)_minmax(24rem,1fr)]">
+        <MovieCommunityStats stats={stats} />
+        <ShareMoviePanel tmdbId={id} friends={friends} signedIn={Boolean(user)} />
+      </section>
       <section className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(24rem,0.9fr)]">
         <MovieDiscussion tmdbId={id} comments={comments} signedIn={Boolean(user)} />
         <SimilarMoviesPanel movies={similar} />

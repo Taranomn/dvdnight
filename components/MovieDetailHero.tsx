@@ -4,8 +4,7 @@ import { Calendar, Clock } from "lucide-react";
 import type { FullMovieData } from "@/types/movie";
 import { backdropUrl, formatRuntime, posterUrl } from "@/lib/utils";
 import { RatingBadge } from "@/components/RatingBadge";
-import { TrailerBackground } from "@/components/TrailerTakeover";
-import { TrailerEmbed } from "@/components/TrailerEmbed";
+import { TrailerBackground, TrailerTakeoverButton } from "@/components/TrailerTakeover";
 import { WatchlistButton } from "@/components/WatchlistButton";
 import { MovieStatusActions } from "@/components/MovieStatusActions";
 
@@ -75,7 +74,7 @@ export function MovieDetailHero({ movie, watchlistState, liked }: MovieDetailHer
             {movie.overview ?? "Overview not available."}
           </p>
           <div className="mt-7 grid gap-3 sm:flex">
-            <TrailerEmbed trailerKey={movie.trailer_key} />
+            <TrailerTakeoverButton trailerKey={movie.trailer_key} title={movie.title} />
             <WatchlistButton
               tmdbId={movie.tmdb_id}
               movieId={watchlistState?.movie_id}

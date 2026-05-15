@@ -42,9 +42,9 @@ export function TrailerTakeoverButton({
         Watch Trailer
       </button>
       {open ? (
-        <div className="trailer-backdrop fixed inset-0 z-[80] flex items-center justify-center bg-black/95 p-3 backdrop-blur-sm sm:p-6">
-          <div className="trailer-takeover-screen relative w-full max-w-6xl overflow-hidden rounded-2xl border border-white/10 bg-black shadow-2xl shadow-black/60">
-            <div className="aspect-video max-h-[calc(100dvh-5rem)] w-full">
+        <div className="trailer-backdrop fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-black/95 px-3 py-16 backdrop-blur-sm sm:p-6">
+          <div className="trailer-takeover-screen relative z-10 w-full max-w-6xl overflow-hidden rounded-2xl border border-white/10 bg-black shadow-2xl shadow-black/60">
+            <div className="aspect-video w-full max-h-[78dvh]">
               <iframe
                 src={`https://www.youtube.com/embed/${trailerKey}?autoplay=1&controls=1&modestbranding=1&playsinline=1`}
                 title={`${title} trailer`}
@@ -57,7 +57,7 @@ export function TrailerTakeoverButton({
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/20" />
           <button
             onClick={() => setOpen(false)}
-            className="absolute right-4 top-4 rounded-full border border-white/20 bg-black/70 p-3 text-white backdrop-blur transition hover:scale-105 hover:bg-white/15 sm:right-6 sm:top-6"
+            className="fixed right-4 top-[max(1rem,env(safe-area-inset-top))] z-20 rounded-full border border-white/20 bg-black/70 p-3 text-white backdrop-blur transition hover:scale-105 hover:bg-white/15 sm:right-6 sm:top-6"
             aria-label="Close trailer"
           >
             <X className="h-6 w-6" />

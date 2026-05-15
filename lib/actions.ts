@@ -9,6 +9,20 @@ import { upsertMovieByTmdbId } from "@/lib/movies";
 import { addToWatchlist, removeFromWatchlist, saveMovieInteractionByTmdbId, setWatchlistStatus, toggleMovieLike } from "@/lib/watchlist";
 import { updateUserTasteProfile } from "@/lib/recommendations";
 
+function getPublicOrigin(headerStore: Headers) {
+  const configuredOrigin = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "");
+  if (configuredOrigin) return configuredOrigin;
+
+  const forwardedHost = headerStore.get("x-forwarded-host");
+  const forwardedProto = headerStore.get("x-forwarded-proto") ?? "https";
+  if (forwardedHost) return `${forwardedProto}://${forwardedHost}`;
+
+  const host = headerStore.get("host");
+  if (host) return `https://${host}`;
+
+  return "http://localhost:3000";
+}
+
 export async function signUpAction(formData: FormData) {
   const supabase = await createServerSupabaseClient();
   if (!supabase) redirect("/signup?error=Supabase%20is%20not%20configured");
@@ -61,7 +75,7 @@ export async function signInWithGoogleAction(formData: FormData) {
   if (!supabase) redirect("/login?error=Supabase%20is%20not%20configured");
 
   const headerStore = await headers();
-  const origin = headerStore.get("origin") ?? "http://localhost:3000";
+  const origin = getPublicOrigin(headerStore);
   const redirectTo = String(formData.get("redirectTo") ?? "/explore");
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",

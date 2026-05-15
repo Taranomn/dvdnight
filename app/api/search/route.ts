@@ -1,6 +1,23 @@
 import { NextResponse } from "next/server";
 import { discoverMovies, enrichMoviesWithRatings, getFullMovieData, searchMovies, searchPeople } from "@/lib/movies";
 import { getMovieDetails } from "@/lib/tmdb";
+import type { DisplayMovie } from "@/types/movie";
+
+function rottenToNumber(value?: string | null) {
+  if (!value) return 0;
+  const parsed = Number(value.replace("%", ""));
+  return Number.isFinite(parsed) ? parsed / 10 : 0;
+}
+
+function bestSearchRating(movie: DisplayMovie) {
+  if ("imdb_rating" in movie && movie.imdb_rating) return Number(movie.imdb_rating);
+  if ("rotten_tomatoes_rating" in movie) return rottenToNumber(movie.rotten_tomatoes_rating);
+  return 0;
+}
+
+function sortByBestSearchRating<T extends DisplayMovie>(movies: T[]) {
+  return [...movies].sort((a, b) => bestSearchRating(b) - bestSearchRating(a));
+}
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -12,7 +29,10 @@ export async function GET(request: Request) {
   const sort = searchParams.get("sort") || "popularity.desc";
   const hasFilters = Boolean(genre || year || rating || runtime);
   const trimmedQuery = query.trim();
-  if (trimmedQuery.length < 2 && !hasFilters) return NextResponse.json({ results: [], people: [] });
+  if (trimmedQuery.length < 2 && !hasFilters) {
+    const results = sortByBestSearchRating(await enrichMoviesWithRatings(await discoverMovies({ sort_by: "vote_count.desc", "vote_count.gte": 1000 }), 18));
+    return NextResponse.json({ results, people: [] });
+  }
 
   try {
     const peoplePromise = trimmedQuery.length >= 2 ? searchPeople(trimmedQuery).catch(() => []) : Promise.resolve([]);
@@ -65,12 +85,7 @@ export async function GET(request: Request) {
           }
         }),
       );
-      enriched.sort((a, b) => {
-        const ar = "imdb_rating" in a ? (a.imdb_rating ?? 0) : 0;
-        const br = "imdb_rating" in b ? (b.imdb_rating ?? 0) : 0;
-        return br - ar;
-      });
-      return NextResponse.json({ results: enriched, people });
+      return NextResponse.json({ results: sortByBestSearchRating(enriched), people });
     }
 
     return NextResponse.json({ results: await enrichMoviesWithRatings(results.slice(0, 18), 18), people });

@@ -107,7 +107,7 @@ export function MovieDetailTabs({ movie, similar }: { movie: FullMovieData; simi
           {similar.length ? (
             <MovieGrid
               movies={similar.slice(0, 12)}
-              className="sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4"
+              className="gap-y-14 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4"
             />
           ) : (
             <p className="text-zinc-400">No similar movies found.</p>

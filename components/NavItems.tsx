@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Clapperboard, Compass, Heart, Home, ListMusic, Search, Settings, Shuffle, UserRound, Users, type LucideIcon } from "lucide-react";
+import { useState } from "react";
+import { Clapperboard, Compass, Heart, Home, ListMusic, MoreHorizontal, Search, Settings, Shuffle, UserRound, Users, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type NavItem = {
@@ -29,9 +30,16 @@ const mobileItems: NavItem[] = [
   { href: "/", label: "Home", icon: Home },
   { href: "/search", label: "Search", icon: Search },
   { href: "/explore", label: "Explore", icon: Compass },
-  { href: "/playlists", label: "Lists", icon: ListMusic },
   { href: "/match", label: "Match", icon: Shuffle },
+];
+
+const mobileMoreItems: NavItem[] = [
+  { href: "/watchlist", label: "Watchlist", icon: Heart },
+  { href: "/playlists", label: "Playlists", icon: ListMusic },
+  { href: "/friends", label: "Friends", icon: Users },
+  { href: "/groups", label: "Groups", icon: Clapperboard },
   { href: "/profile", label: "Profile", icon: UserRound },
+  { href: "/admin", label: "Admin", icon: Settings },
 ];
 
 function isActive(pathname: string, href: string) {
@@ -66,25 +74,67 @@ export function DesktopNavItems() {
 
 export function MobileNavItems() {
   const pathname = usePathname();
+  const [moreOpen, setMoreOpen] = useState(false);
+  const moreActive = mobileMoreItems.some((item) => isActive(pathname, item.href));
+
   return (
-    <div className="grid grid-cols-6 gap-1">
-      {mobileItems.map((item) => {
-        const Icon = item.icon;
-        const active = isActive(pathname, item.href);
-        return (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={cn(
-              "flex flex-col items-center rounded-2xl px-1 py-2 text-[0.65rem] text-zinc-500 transition hover:-translate-y-0.5 hover:text-white",
-              active && "bg-[#ff3b5c]/15 text-[#ff3b5c]",
-            )}
-          >
-            <Icon className={cn("mb-1 h-5 w-5 transition", active && "scale-110 fill-current")} />
-            {item.label}
-          </Link>
-        );
-      })}
+    <div className="relative">
+      {moreOpen ? (
+        <div className="absolute bottom-[calc(100%+0.7rem)] right-0 w-56 rounded-3xl border border-white/10 bg-[#0b0f1a]/95 p-2 shadow-2xl shadow-black/60 backdrop-blur-2xl">
+          <div className="grid gap-1">
+            {mobileMoreItems.map((item) => {
+              const Icon = item.icon;
+              const active = isActive(pathname, item.href);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setMoreOpen(false)}
+                  className={cn(
+                    "flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-semibold text-zinc-300 transition hover:bg-white/[0.06] hover:text-white",
+                    active && "bg-[#ff3b5c]/15 text-[#ff3b5c]",
+                  )}
+                >
+                  <Icon className={cn("h-4 w-4", active && "fill-current")} />
+                  {item.label}
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      ) : null}
+      <div className="grid grid-cols-5 gap-1">
+        {mobileItems.map((item) => {
+          const Icon = item.icon;
+          const active = isActive(pathname, item.href);
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={cn(
+                "flex flex-col items-center rounded-2xl px-1 py-2 text-[0.65rem] text-zinc-500 transition hover:-translate-y-0.5 hover:text-white",
+                active && "bg-[#ff3b5c]/15 text-[#ff3b5c]",
+              )}
+            >
+              <Icon className={cn("mb-1 h-5 w-5 transition", active && "scale-110 fill-current")} />
+              {item.label}
+            </Link>
+          );
+        })}
+        <button
+          type="button"
+          onClick={() => setMoreOpen((value) => !value)}
+          className={cn(
+            "flex flex-col items-center rounded-2xl px-1 py-2 text-[0.65rem] text-zinc-500 transition hover:-translate-y-0.5 hover:text-white",
+            (moreOpen || moreActive) && "bg-[#ff3b5c]/15 text-[#ff3b5c]",
+          )}
+          aria-expanded={moreOpen}
+          aria-label="More navigation"
+        >
+          <MoreHorizontal className={cn("mb-1 h-5 w-5 transition", (moreOpen || moreActive) && "scale-110")} />
+          More
+        </button>
+      </div>
     </div>
   );
 }

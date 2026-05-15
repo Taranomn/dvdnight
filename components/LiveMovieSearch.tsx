@@ -18,6 +18,22 @@ function getKnownFor(person: PersonSearchResult) {
     .join(", ");
 }
 
+function rottenToNumber(value?: string | null) {
+  if (!value) return 0;
+  const parsed = Number(value.replace("%", ""));
+  return Number.isFinite(parsed) ? parsed / 10 : 0;
+}
+
+function bestSearchRating(movie: DisplayMovie) {
+  if ("imdb_rating" in movie && movie.imdb_rating) return Number(movie.imdb_rating);
+  if ("rotten_tomatoes_rating" in movie) return rottenToNumber(movie.rotten_tomatoes_rating);
+  return 0;
+}
+
+function sortByBestSearchRating(movies: DisplayMovie[]) {
+  return [...movies].sort((a, b) => bestSearchRating(b) - bestSearchRating(a));
+}
+
 export function LiveMovieSearch({
   initialQuery = "",
   initialResults = [],
@@ -48,6 +64,7 @@ export function LiveMovieSearch({
       if (trimmed.length < 2 && !hasFilters) {
         setError("");
         setPeople([]);
+        setResults(sortByBestSearchRating(initialResults));
         return;
       }
 
@@ -66,7 +83,7 @@ export function LiveMovieSearch({
             people?: PersonSearchResult[];
             error?: string;
           };
-          setResults(data.results ?? []);
+          setResults(sort === "imdb_rating.desc" ? sortByBestSearchRating(data.results ?? []) : (data.results ?? []));
           setPeople(data.people ?? []);
           setError(data.error ?? "");
         } catch (caught) {
@@ -79,7 +96,7 @@ export function LiveMovieSearch({
       window.clearTimeout(timer);
       controller.abort();
     };
-  }, [genre, rating, runtime, sort, trimmed, year]);
+  }, [genre, initialResults, rating, runtime, sort, trimmed, year]);
 
   return (
     <div>

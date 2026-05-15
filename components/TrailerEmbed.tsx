@@ -22,7 +22,7 @@ export function TrailerEmbed({ trailerKey, className }: { trailerKey?: string | 
         Watch Trailer
       </button>
       {open ? (
-        <div className="trailer-backdrop fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-black/85 px-3 py-16 backdrop-blur-md sm:p-6">
+        <div className="trailer-backdrop fixed inset-0 z-[100] flex h-dvh w-dvw items-center justify-center overflow-hidden bg-black/85 p-3 backdrop-blur-md sm:p-6">
           <div className="trailer-forward glass relative w-full max-w-5xl rounded-3xl p-2 sm:p-3">
             <button
               onClick={() => setOpen(false)}

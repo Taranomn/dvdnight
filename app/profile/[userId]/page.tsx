@@ -1,9 +1,8 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
-import { DirectMessagePanel } from "@/components/DirectMessagePanel";
 import { MovieGrid } from "@/components/MovieGrid";
 import { createAdminClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/supabase/server";
-import { getConversation } from "@/lib/social";
 import type { StoredMovie, WatchlistItem } from "@/types/movie";
 import type { Profile } from "@/types/user";
 
@@ -26,11 +25,10 @@ export default async function FriendProfilePage({ params }: { params: Promise<{ 
   if (!allowed) notFound();
 
   const admin = createAdminClient();
-  const [{ data: profile }, { data: watchlistRows }, { data: likeRows }, messages] = await Promise.all([
+  const [{ data: profile }, { data: watchlistRows }, { data: likeRows }] = await Promise.all([
     admin.from("profiles").select("*").eq("id", userId).maybeSingle(),
     admin.from("watchlist").select("*, movies(*)").eq("user_id", userId).order("created_at", { ascending: false }),
     admin.from("movie_likes").select("*, movies(*)").eq("user_id", userId).order("created_at", { ascending: false }),
-    getConversation(viewer.id, userId).catch(() => []),
   ]);
   if (!profile) notFound();
 
@@ -43,7 +41,8 @@ export default async function FriendProfilePage({ params }: { params: Promise<{ 
   return (
     <div className="mx-auto max-w-7xl px-4 md:px-8">
       <section className="glass rounded-[2rem] p-6 md:p-8">
-        <div className="flex flex-wrap items-center gap-5">
+        <div className="flex flex-wrap items-center justify-between gap-5">
+          <div className="flex flex-wrap items-center gap-5">
           <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-[#ff3b5c] to-[#7c5cff] text-4xl font-black">
             {typedProfile.avatar_url ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -56,6 +55,12 @@ export default async function FriendProfilePage({ params }: { params: Promise<{ 
             <h1 className="text-4xl font-black">{typedProfile.display_name || typedProfile.username || "Movie friend"}</h1>
             <p className="mt-1 text-zinc-400">@{typedProfile.username || "no-username"}</p>
           </div>
+          </div>
+          {viewer.id !== userId ? (
+            <Link href={`/messages/${userId}`} className="primary-button px-5 py-3">
+              Message
+            </Link>
+          ) : null}
         </div>
         <div className="mt-8 grid gap-4 sm:grid-cols-3">
           <div className="rounded-3xl border border-white/10 bg-white/[0.035] p-5">
@@ -72,7 +77,6 @@ export default async function FriendProfilePage({ params }: { params: Promise<{ 
           </div>
         </div>
       </section>
-      {viewer.id !== userId ? <DirectMessagePanel friendId={userId} viewerId={viewer.id} messages={messages} /> : null}
 
       <section className="mt-8">
         <h2 className="mb-4 text-2xl font-bold">Wishlist</h2>

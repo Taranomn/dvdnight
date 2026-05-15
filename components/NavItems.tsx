@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Clapperboard, Compass, Heart, Home, ListMusic, MessageCircle, MoreHorizontal, Search, Settings, Shuffle, UserRound, Users, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -82,6 +82,10 @@ export function MobileNavItems({ isAdmin = false }: { isAdmin?: boolean }) {
   const visibleMoreItems = mobileMoreItems.filter((item) => !item.adminOnly || isAdmin);
   const moreActive = visibleMoreItems.some((item) => isActive(pathname, item.href));
 
+  useEffect(() => {
+    setMoreOpen(false);
+  }, [pathname]);
+
   return (
     <div className="relative">
       {moreOpen ? (
@@ -116,6 +120,7 @@ export function MobileNavItems({ isAdmin = false }: { isAdmin?: boolean }) {
             <Link
               key={item.href}
               href={item.href}
+              onClick={() => setMoreOpen(false)}
               className={cn(
                 "flex flex-col items-center rounded-2xl px-1 py-2 text-[0.65rem] text-zinc-500 transition hover:-translate-y-0.5 hover:text-white",
                 active && "bg-[#ff3b5c]/15 text-[#ff3b5c]",

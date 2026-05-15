@@ -10,24 +10,25 @@ export default async function PersonPage({
   searchParams,
 }: {
   params: Promise<{ personId: string }>;
-  searchParams: Promise<{ sort?: string; type?: string }>;
+  searchParams: Promise<{ sort?: string }>;
 }) {
   const { personId } = await params;
-  const { sort = "popularity", type = "all" } = await searchParams;
+  const { sort = "popularity" } = await searchParams;
   const id = Number(personId);
   if (!Number.isFinite(id)) notFound();
 
   const [person, credits] = await Promise.all([getPersonDetails(id), getPersonMovieCredits(id)]);
   const allCredits = [
-    ...(type === "crew" ? [] : credits.cast.map((credit) => ({ ...credit, creditType: "Acting" }))),
-    ...(type === "cast" ? [] : credits.crew.map((credit) => ({ ...credit, creditType: credit.job ?? "Crew" }))),
+    ...credits.cast.map((credit) => ({ ...credit, creditType: "Acting" })),
+    ...credits.crew.map((credit) => ({ ...credit, creditType: credit.job ?? "Crew" })),
   ];
   const deduped = Array.from(new Map(allCredits.map((credit) => [credit.id, credit])).values());
   const sorted = deduped.sort((a, b) => {
-    if (sort === "date") return String(b.release_date ?? "").localeCompare(String(a.release_date ?? ""));
+    if (sort === "newest") return String(b.release_date ?? "").localeCompare(String(a.release_date ?? ""));
+    if (sort === "oldest") return String(a.release_date ?? "").localeCompare(String(b.release_date ?? ""));
     if (sort === "rating") return (b.vote_average ?? 0) - (a.vote_average ?? 0);
     if (sort === "title") return a.title.localeCompare(b.title);
-    return (b.vote_average ?? 0) - (a.vote_average ?? 0);
+    return (b.popularity ?? 0) - (a.popularity ?? 0);
   });
   const enrichedSorted = await enrichMoviesWithRatings(sorted, 18);
 
@@ -55,14 +56,15 @@ export default async function PersonPage({
       <div className="mt-8 flex flex-wrap items-center justify-between gap-4">
         <h2 className="text-2xl font-bold">Filmography</h2>
         <div className="flex flex-wrap gap-2">
-          {["all", "cast", "crew"].map((value) => (
-            <Link key={value} href={`/people/${id}?type=${value}&sort=${sort}`} className={`secondary-button px-3 py-2 text-sm ${type === value ? "border-[#ff3b5c]/50 bg-[#ff3b5c]/15" : ""}`}>
-              {value}
-            </Link>
-          ))}
-          {["popularity", "date", "rating", "title"].map((value) => (
-            <Link key={value} href={`/people/${id}?type=${type}&sort=${value}`} className={`secondary-button px-3 py-2 text-sm ${sort === value ? "border-[#ff3b5c]/50 bg-[#ff3b5c]/15" : ""}`}>
-              {value}
+          {[
+            ["popularity", "Most popular"],
+            ["rating", "Highest rated"],
+            ["newest", "Newest"],
+            ["oldest", "Oldest"],
+            ["title", "A-Z"],
+          ].map(([value, label]) => (
+            <Link key={value} href={`/people/${id}?sort=${value}`} className={`secondary-button px-3 py-2 text-sm ${sort === value ? "border-[#ff3b5c]/50 bg-[#ff3b5c]/15" : ""}`}>
+              {label}
             </Link>
           ))}
         </div>

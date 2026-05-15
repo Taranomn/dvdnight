@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Edit3, Search } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
 import { MessengerAvatar } from "@/components/MessengerAvatar";
+import { getFriends } from "@/lib/friends";
 import { getMessageThreads } from "@/lib/social";
 import { requireUser } from "@/lib/supabase/server";
 
@@ -17,7 +18,16 @@ function formatWhen(value?: string | null) {
 
 export default async function MessagesPage() {
   const user = await requireUser();
-  const threads = await getMessageThreads(user.id);
+  let loadError = false;
+  const threads = await getMessageThreads(user.id).catch(async () => {
+    loadError = true;
+    const friends = await getFriends(user.id).catch(() => []);
+    return friends.map((friendship) => ({
+      friend: friendship.friend,
+      lastMessage: null,
+      unreadCount: 0,
+    }));
+  });
 
   return (
     <div className="mx-auto min-h-[calc(100dvh-6rem)] max-w-4xl px-4 pb-8 md:px-8">
@@ -40,6 +50,11 @@ export default async function MessagesPage() {
       </div>
 
       <div className="mt-7 space-y-4">
+        {loadError ? (
+          <div className="rounded-3xl border border-[#ff3b5c]/30 bg-[#ff3b5c]/10 p-4 text-sm text-zinc-200">
+            Messages need the social database migration before conversations can load fully. I am showing your friends so you can still open a chat.
+          </div>
+        ) : null}
         {threads.map((thread) => {
           const name = thread.friend.display_name || thread.friend.username || "Movie friend";
           const mine = thread.lastMessage?.sender_id === user.id;

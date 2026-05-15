@@ -1,19 +1,15 @@
 import Image from "next/image";
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { MovieGrid } from "@/components/MovieGrid";
+import { SortableFilmography } from "@/components/SortableFilmography";
 import { enrichMoviesWithRatings } from "@/lib/movies";
 import { getPersonDetails, getPersonMovieCredits } from "@/lib/tmdb";
 
 export default async function PersonPage({
   params,
-  searchParams,
 }: {
   params: Promise<{ personId: string }>;
-  searchParams: Promise<{ sort?: string }>;
 }) {
   const { personId } = await params;
-  const { sort = "popularity" } = await searchParams;
   const id = Number(personId);
   if (!Number.isFinite(id)) notFound();
 
@@ -23,14 +19,7 @@ export default async function PersonPage({
     ...credits.crew.map((credit) => ({ ...credit, creditType: credit.job ?? "Crew" })),
   ];
   const deduped = Array.from(new Map(allCredits.map((credit) => [credit.id, credit])).values());
-  const sorted = deduped.sort((a, b) => {
-    if (sort === "newest") return String(b.release_date ?? "").localeCompare(String(a.release_date ?? ""));
-    if (sort === "oldest") return String(a.release_date ?? "").localeCompare(String(b.release_date ?? ""));
-    if (sort === "rating") return (b.vote_average ?? 0) - (a.vote_average ?? 0);
-    if (sort === "title") return a.title.localeCompare(b.title);
-    return (b.popularity ?? 0) - (a.popularity ?? 0);
-  });
-  const enrichedSorted = await enrichMoviesWithRatings(sorted, 18);
+  const enrichedSorted = await enrichMoviesWithRatings(deduped, 30);
 
   return (
     <div className="mx-auto max-w-7xl px-4 md:px-8">
@@ -55,22 +44,9 @@ export default async function PersonPage({
 
       <div className="mt-8 flex flex-wrap items-center justify-between gap-4">
         <h2 className="text-2xl font-bold">Filmography</h2>
-        <div className="flex flex-wrap gap-2">
-          {[
-            ["popularity", "Most popular"],
-            ["rating", "Highest rated"],
-            ["newest", "Newest"],
-            ["oldest", "Oldest"],
-            ["title", "A-Z"],
-          ].map(([value, label]) => (
-            <Link key={value} href={`/people/${id}?sort=${value}`} className={`secondary-button px-3 py-2 text-sm ${sort === value ? "border-[#ff3b5c]/50 bg-[#ff3b5c]/15" : ""}`}>
-              {label}
-            </Link>
-          ))}
-        </div>
       </div>
-      <div className="mt-6">
-        <MovieGrid movies={enrichedSorted} />
+      <div className="mt-4">
+        <SortableFilmography movies={enrichedSorted} />
       </div>
     </div>
   );

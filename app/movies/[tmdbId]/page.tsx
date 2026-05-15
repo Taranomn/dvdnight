@@ -5,7 +5,7 @@ import { MovieCommunityStats } from "@/components/MovieCommunityStats";
 import { MovieDiscussion } from "@/components/MovieDiscussion";
 import { MovieDetailHero } from "@/components/MovieDetailHero";
 import { MovieDetailTabs } from "@/components/MovieDetailTabs";
-import { ShareMoviePanel } from "@/components/ShareMoviePanel";
+import { ShareMovieButton } from "@/components/ShareMovieButton";
 import { SimilarMoviesPanel } from "@/components/SimilarMoviesPanel";
 import { getFriends } from "@/lib/friends";
 import { enrichMoviesWithRatings, getFullMovieData } from "@/lib/movies";
@@ -57,9 +57,11 @@ export default async function MovieDetailPage({ params }: { params: Promise<{ tm
           <CastRail movie={movie} />
         </div>
       </section>
-      <section className="grid gap-6 xl:grid-cols-[minmax(0,0.85fr)_minmax(24rem,1fr)]">
+      <div className="flex justify-end">
+        <ShareMovieButton tmdbId={id} movieTitle={movie.title} friends={friends} signedIn={Boolean(user)} />
+      </div>
+      <section>
         <MovieCommunityStats stats={stats} />
-        <ShareMoviePanel tmdbId={id} friends={friends} signedIn={Boolean(user)} />
       </section>
       <section className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(24rem,0.9fr)]">
         <MovieDiscussion tmdbId={id} comments={comments} signedIn={Boolean(user)} />

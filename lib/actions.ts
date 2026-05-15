@@ -8,6 +8,7 @@ import { acceptFriendRequest, declineFriendRequest, removeFriend, sendFriendRequ
 import { upsertMovieByTmdbId } from "@/lib/movies";
 import { addToWatchlist, removeFromWatchlist, saveMovieInteractionByTmdbId, setWatchlistStatus, toggleMovieLike } from "@/lib/watchlist";
 import { updateUserTasteProfile } from "@/lib/recommendations";
+import { createMovieComment, sendDirectMessage } from "@/lib/social";
 
 function getPublicOrigin(headerStore: Headers) {
   const configuredOrigin = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "");
@@ -307,4 +308,21 @@ export async function addMovieToCuratedListAction(formData: FormData) {
   if (error) throw new Error(error.message);
   revalidatePath("/admin");
   revalidatePath("/lists/[slug]", "page");
+}
+
+export async function addMovieCommentAction(tmdbId: number, formData: FormData) {
+  const user = await requireUser();
+  const body = String(formData.get("body") ?? "");
+  const ratingValue = String(formData.get("rating") ?? "");
+  const rating = ratingValue ? Number(ratingValue) : null;
+  await createMovieComment(user.id, tmdbId, body, rating);
+  revalidatePath(`/movies/${tmdbId}`);
+}
+
+export async function sendDirectMessageAction(receiverId: string, formData: FormData) {
+  const user = await requireUser();
+  const body = String(formData.get("body") ?? "");
+  await sendDirectMessage(user.id, receiverId, body);
+  revalidatePath(`/profile/${receiverId}`);
+  revalidatePath("/messages");
 }

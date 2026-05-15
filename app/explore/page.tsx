@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { EmptyState } from "@/components/EmptyState";
 import { ExploreModes } from "@/components/ExploreModes";
+import { ExploreSignalPanel } from "@/components/ExploreSignalPanel";
 import { MovieGrid } from "@/components/MovieGrid";
 import { MovieSearchBar } from "@/components/MovieSearchBar";
-import { RefreshExploreButton } from "@/components/RefreshExploreButton";
 import { generateExploreSections } from "@/lib/recommendations";
 import { getExploreRecommendations } from "@/lib/explore";
 import { enrichMoviesWithRatings, getPopularMovies, getTopRatedMovies, getTrendingMovies, getUpcomingMovies } from "@/lib/movies";
@@ -63,10 +63,6 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
             Personalized picks based on your watchlist, liked movies, watched history, and genre activity.
           </p>
         </div>
-        <div className="flex flex-wrap gap-3">
-          <RefreshExploreButton />
-          <Link href="/search" className="primary-button px-5 py-3">Search Movies</Link>
-        </div>
       </div>
       {!profile?.onboarding_completed ? (
         <div className="glass mt-6 flex flex-wrap items-center justify-between gap-4 rounded-3xl p-5">
@@ -75,20 +71,18 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
         </div>
       ) : null}
 
-      <div className="mt-6 grid gap-4 sm:grid-cols-3">
-        <div className="glass rounded-3xl p-5">
-          <div className="text-3xl font-black">{watchlist.length}</div>
-          <div className="text-sm text-zinc-400">Watchlist signals</div>
-        </div>
-        <div className="glass rounded-3xl p-5">
-          <div className="text-3xl font-black">{liked.length}</div>
-          <div className="text-sm text-zinc-400">Liked movies</div>
-        </div>
-        <div className="glass rounded-3xl p-5">
-          <div className="text-3xl font-black">{watched.length}</div>
-          <div className="text-sm text-zinc-400">Watched movies</div>
-        </div>
-      </div>
+      <ExploreSignalPanel
+        signals={[
+          {
+            key: "watchlist",
+            label: "Watchlist signals",
+            helper: "Movies you want to watch.",
+            movies: watchlist.map((item) => item.movies),
+          },
+          { key: "liked", label: "Liked movies", helper: "Movies shaping your taste profile.", movies: liked },
+          { key: "watched", label: "Watched movies", helper: "Movies you already finished.", movies: watched.map((item) => item.movies) },
+        ]}
+      />
 
       <div className="mt-6 flex flex-wrap gap-2">
         {topGenres.map(([id, genre]) => (

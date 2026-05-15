@@ -16,6 +16,7 @@ export async function Navbar() {
     supabase && auth.user
       ? await supabase.from("profiles").select("*").eq("id", auth.user.id).maybeSingle()
       : { data: null };
+  const isAdmin = profile?.role === "admin";
 
   return (
     <>
@@ -24,7 +25,7 @@ export async function Navbar() {
           <Film className="h-6 w-6 text-[#ff3b5c]" />
           Movie<span className="text-[#ff3b5c]">Night</span>
         </Link>
-        <DesktopNavItems />
+        <DesktopNavItems isAdmin={isAdmin} />
         <div className="mt-auto space-y-4">
           {auth.user ? (
             <form action={logoutAction}>
@@ -53,7 +54,7 @@ export async function Navbar() {
         <Bell className="h-5 w-5 text-zinc-300" />
       </div>
       <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-[#05050a]/90 px-3 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] pt-2 backdrop-blur-2xl md:hidden">
-        <MobileNavItems />
+        <MobileNavItems isAdmin={isAdmin} />
       </nav>
     </>
   );

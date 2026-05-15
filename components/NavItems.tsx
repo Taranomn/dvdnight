@@ -3,13 +3,14 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { Clapperboard, Compass, Heart, Home, ListMusic, MoreHorizontal, Search, Settings, Shuffle, UserRound, Users, type LucideIcon } from "lucide-react";
+import { Clapperboard, Compass, Heart, Home, ListMusic, MessageCircle, MoreHorizontal, Search, Settings, Shuffle, UserRound, Users, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type NavItem = {
   href: string;
   label: string;
   icon: LucideIcon;
+  adminOnly?: boolean;
 };
 
 const desktopItems: NavItem[] = [
@@ -19,11 +20,12 @@ const desktopItems: NavItem[] = [
   { href: "/playlists", label: "Playlists", icon: ListMusic },
   { href: "/watchlist", label: "Watchlist", icon: Heart },
   { href: "/friends", label: "Friends", icon: Users },
+  { href: "/messages", label: "Messages", icon: MessageCircle },
   { href: "/match", label: "Match", icon: Shuffle },
   { href: "/groups", label: "Groups", icon: Clapperboard },
   { href: "/profile", label: "Profile", icon: UserRound },
   { href: "/profile", label: "Settings", icon: Settings },
-  { href: "/admin", label: "Admin", icon: Settings },
+  { href: "/admin", label: "Admin", icon: Settings, adminOnly: true },
 ];
 
 const mobileItems: NavItem[] = [
@@ -37,9 +39,10 @@ const mobileMoreItems: NavItem[] = [
   { href: "/watchlist", label: "Watchlist", icon: Heart },
   { href: "/playlists", label: "Playlists", icon: ListMusic },
   { href: "/friends", label: "Friends", icon: Users },
+  { href: "/messages", label: "Messages", icon: MessageCircle },
   { href: "/groups", label: "Groups", icon: Clapperboard },
   { href: "/profile", label: "Profile", icon: UserRound },
-  { href: "/admin", label: "Admin", icon: Settings },
+  { href: "/admin", label: "Admin", icon: Settings, adminOnly: true },
 ];
 
 function isActive(pathname: string, href: string) {
@@ -47,11 +50,12 @@ function isActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export function DesktopNavItems() {
+export function DesktopNavItems({ isAdmin = false }: { isAdmin?: boolean }) {
   const pathname = usePathname();
+  const visibleItems = desktopItems.filter((item) => !item.adminOnly || isAdmin);
   return (
     <nav className="space-y-2">
-      {desktopItems.map((item) => {
+      {visibleItems.map((item) => {
         const Icon = item.icon;
         const active = isActive(pathname, item.href);
         return (
@@ -72,17 +76,18 @@ export function DesktopNavItems() {
   );
 }
 
-export function MobileNavItems() {
+export function MobileNavItems({ isAdmin = false }: { isAdmin?: boolean }) {
   const pathname = usePathname();
   const [moreOpen, setMoreOpen] = useState(false);
-  const moreActive = mobileMoreItems.some((item) => isActive(pathname, item.href));
+  const visibleMoreItems = mobileMoreItems.filter((item) => !item.adminOnly || isAdmin);
+  const moreActive = visibleMoreItems.some((item) => isActive(pathname, item.href));
 
   return (
     <div className="relative">
       {moreOpen ? (
         <div className="absolute bottom-[calc(100%+0.7rem)] right-0 w-56 rounded-3xl border border-white/10 bg-[#0b0f1a]/95 p-2 shadow-2xl shadow-black/60 backdrop-blur-2xl">
           <div className="grid gap-1">
-            {mobileMoreItems.map((item) => {
+            {visibleMoreItems.map((item) => {
               const Icon = item.icon;
               const active = isActive(pathname, item.href);
               return (

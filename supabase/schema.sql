@@ -137,6 +137,27 @@ create table if not exists public.movie_recommendations (
   unique(user_id, movie_id, section)
 );
 
+create table if not exists public.movie_comments (
+  id uuid primary key default gen_random_uuid(),
+  movie_id uuid references public.movies(id) on delete cascade,
+  user_id uuid references public.profiles(id) on delete cascade,
+  body text not null check (char_length(trim(body)) > 0),
+  rating numeric check (rating is null or (rating >= 0 and rating <= 10)),
+  parent_id uuid references public.movie_comments(id) on delete cascade,
+  created_at timestamp with time zone default now(),
+  updated_at timestamp with time zone default now()
+);
+
+create table if not exists public.direct_messages (
+  id uuid primary key default gen_random_uuid(),
+  sender_id uuid references public.profiles(id) on delete cascade,
+  receiver_id uuid references public.profiles(id) on delete cascade,
+  body text not null check (char_length(trim(body)) > 0),
+  read_at timestamp with time zone,
+  created_at timestamp with time zone default now(),
+  check (sender_id <> receiver_id)
+);
+
 create table if not exists public.curated_lists (
   id uuid primary key default gen_random_uuid(),
   slug text unique not null,
@@ -218,6 +239,11 @@ create trigger curated_lists_set_updated_at
 before update on public.curated_lists
 for each row execute procedure public.set_updated_at();
 
+drop trigger if exists movie_comments_set_updated_at on public.movie_comments;
+create trigger movie_comments_set_updated_at
+before update on public.movie_comments
+for each row execute procedure public.set_updated_at();
+
 create or replace function public.handle_new_user()
 returns trigger
 language plpgsql
@@ -250,6 +276,10 @@ create index if not exists user_movie_interactions_user_id_idx on public.user_mo
 create index if not exists user_movie_interactions_movie_id_idx on public.user_movie_interactions(movie_id);
 create index if not exists user_taste_profiles_user_id_idx on public.user_taste_profiles(user_id);
 create index if not exists movie_recommendations_user_id_idx on public.movie_recommendations(user_id);
+create index if not exists movie_comments_movie_id_idx on public.movie_comments(movie_id);
+create index if not exists movie_comments_user_id_idx on public.movie_comments(user_id);
+create index if not exists direct_messages_sender_idx on public.direct_messages(sender_id);
+create index if not exists direct_messages_receiver_idx on public.direct_messages(receiver_id);
 create index if not exists curated_list_items_list_id_idx on public.curated_list_items(list_id);
 create index if not exists movies_tmdb_id_idx on public.movies(tmdb_id);
 create index if not exists friend_requests_sender_idx on public.friend_requests(sender_id);

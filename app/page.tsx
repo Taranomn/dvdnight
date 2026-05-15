@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Bell } from "lucide-react";
 import { MovieGrid } from "@/components/MovieGrid";
 import { MovieSearchBar } from "@/components/MovieSearchBar";
-import { enrichMoviesWithRatings, getPopularMovies, getTopRatedMovies, getTrendingMovies } from "@/lib/movies";
+import { enrichMoviesWithRatings, getNowPlayingMovies, getPopularMovies, getTopRatedMovies, getTrendingMovies } from "@/lib/movies";
 import type { DisplayMovie, MovieSummary } from "@/types/movie";
 
 async function safeMovies(loader: () => Promise<MovieSummary[]>) {
@@ -34,12 +34,14 @@ function MovieSection({ title, slug, movies }: { title: string; slug: string; mo
 }
 
 export default async function Home() {
-  const [trendingRaw, popularRaw, topRatedRaw] = await Promise.all([
+  const [latestRaw, trendingRaw, popularRaw, topRatedRaw] = await Promise.all([
+    safeMovies(getNowPlayingMovies),
     safeMovies(getTrendingMovies),
     safeMovies(getPopularMovies),
     safeMovies(getTopRatedMovies),
   ]);
-  const [trending, popular, topRated] = await Promise.all([
+  const [latest, trending, popular, topRated] = await Promise.all([
+    enrichMoviesWithRatings(latestRaw, 12),
     enrichMoviesWithRatings(trendingRaw, 12),
     enrichMoviesWithRatings(popularRaw, 12),
     enrichMoviesWithRatings(topRatedRaw, 12),
@@ -53,6 +55,7 @@ export default async function Home() {
           <Bell className="h-5 w-5" />
         </button>
       </header>
+      <MovieSection title="Latest in Theaters" slug="now-playing" movies={latest} />
       <section className="mt-6 overflow-hidden rounded-[2rem] border border-white/10 bg-[#0b0f1a] p-6 md:p-8">
         <p className="text-sm font-bold uppercase tracking-[0.25em] text-[#ff3b5c]">Movie Night</p>
         <h1 className="mt-3 max-w-3xl text-4xl font-black tracking-normal md:text-6xl">

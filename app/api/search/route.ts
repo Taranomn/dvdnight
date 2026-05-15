@@ -19,6 +19,18 @@ function sortByBestSearchRating<T extends DisplayMovie>(movies: T[]) {
   return [...movies].sort((a, b) => bestSearchRating(b) - bestSearchRating(a));
 }
 
+async function discoverMany(params: Record<string, string | number | undefined>, pages = 3) {
+  const chunks = await Promise.all(
+    Array.from({ length: pages }, (_, index) => discoverMovies({ ...params, page: index + 1 })),
+  );
+  const seen = new Set<number>();
+  return chunks.flat().filter((movie) => {
+    if (seen.has(movie.id)) return false;
+    seen.add(movie.id);
+    return true;
+  });
+}
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const query = searchParams.get("q") ?? "";
@@ -30,7 +42,7 @@ export async function GET(request: Request) {
   const hasFilters = Boolean(genre || year || rating || runtime);
   const trimmedQuery = query.trim();
   if (trimmedQuery.length < 2 && !hasFilters) {
-    const results = sortByBestSearchRating(await enrichMoviesWithRatings(await discoverMovies({ sort_by: "vote_count.desc", "vote_count.gte": 1000 }), 18));
+    const results = sortByBestSearchRating(await enrichMoviesWithRatings(await discoverMany({ sort_by: "vote_count.desc", "vote_count.gte": 1000 }), 36));
     return NextResponse.json({ results, people: [] });
   }
 
@@ -38,7 +50,7 @@ export async function GET(request: Request) {
     const peoplePromise = trimmedQuery.length >= 2 ? searchPeople(trimmedQuery).catch(() => []) : Promise.resolve([]);
     let results = trimmedQuery
       ? await searchMovies(trimmedQuery)
-      : await discoverMovies({
+      : await discoverMany({
           with_genres: genre || undefined,
           "primary_release_year": year || undefined,
           "vote_average.gte": rating || undefined,
@@ -77,7 +89,7 @@ export async function GET(request: Request) {
 
     if (sort === "imdb_rating.desc") {
       const enriched = await Promise.all(
-        results.slice(0, 18).map(async (movie) => {
+        results.slice(0, 48).map(async (movie) => {
           try {
             return await getFullMovieData(movie.id);
           } catch {
@@ -88,7 +100,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ results: sortByBestSearchRating(enriched), people });
     }
 
-    return NextResponse.json({ results: await enrichMoviesWithRatings(results.slice(0, 18), 18), people });
+    return NextResponse.json({ results: await enrichMoviesWithRatings(results.slice(0, 48), 24), people });
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Search failed.", results: [], people: [] },

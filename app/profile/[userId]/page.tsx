@@ -1,7 +1,9 @@
 import { notFound } from "next/navigation";
+import { DirectMessagePanel } from "@/components/DirectMessagePanel";
 import { MovieGrid } from "@/components/MovieGrid";
 import { createAdminClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/supabase/server";
+import { getConversation } from "@/lib/social";
 import type { StoredMovie, WatchlistItem } from "@/types/movie";
 import type { Profile } from "@/types/user";
 
@@ -24,10 +26,11 @@ export default async function FriendProfilePage({ params }: { params: Promise<{ 
   if (!allowed) notFound();
 
   const admin = createAdminClient();
-  const [{ data: profile }, { data: watchlistRows }, { data: likeRows }] = await Promise.all([
+  const [{ data: profile }, { data: watchlistRows }, { data: likeRows }, messages] = await Promise.all([
     admin.from("profiles").select("*").eq("id", userId).maybeSingle(),
     admin.from("watchlist").select("*, movies(*)").eq("user_id", userId).order("created_at", { ascending: false }),
     admin.from("movie_likes").select("*, movies(*)").eq("user_id", userId).order("created_at", { ascending: false }),
+    getConversation(viewer.id, userId).catch(() => []),
   ]);
   if (!profile) notFound();
 
@@ -69,6 +72,7 @@ export default async function FriendProfilePage({ params }: { params: Promise<{ 
           </div>
         </div>
       </section>
+      {viewer.id !== userId ? <DirectMessagePanel friendId={userId} viewerId={viewer.id} messages={messages} /> : null}
 
       <section className="mt-8">
         <h2 className="mb-4 text-2xl font-bold">Wishlist</h2>

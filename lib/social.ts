@@ -134,8 +134,9 @@ export async function getConversation(userId: string, friendId: string) {
 export async function getMessageThreads(userId: string) {
   const friends = await getFriends(userId);
   const admin = createAdminClient();
+  const validFriends = friends.filter((friendship) => friendship.friend?.id && friendship.friend_id);
   const threads = await Promise.all(
-    friends.map(async (friendship) => {
+    validFriends.map(async (friendship) => {
       const friendId = friendship.friend_id;
       const [{ data: messages }, { count }] = await Promise.all([
         admin

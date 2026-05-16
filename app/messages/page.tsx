@@ -21,10 +21,10 @@ export default async function MessagesPage() {
   const threadResult = await getMessageThreads(user.id)
     .then((threads) => ({ threads, loadError: false }))
     .catch(async () => {
-    const friends = await getFriends(user.id).catch(() => []);
+      const friends = await getFriends(user.id).catch(() => []);
       return {
         loadError: true,
-        threads: friends.map((friendship) => ({
+        threads: friends.filter((friendship) => friendship.friend?.id).map((friendship) => ({
           friend: friendship.friend,
           lastMessage: null,
           unreadCount: 0,
@@ -60,6 +60,7 @@ export default async function MessagesPage() {
           </div>
         ) : null}
         {threads.map((thread) => {
+          if (!thread.friend?.id) return null;
           const name = thread.friend.display_name || thread.friend.username || "Movie friend";
           const mine = thread.lastMessage?.sender_id === user.id;
           const preview = thread.lastMessage ? `${mine ? "You: " : ""}${thread.lastMessage.body}` : "Start planning your next movie night.";

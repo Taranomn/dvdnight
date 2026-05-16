@@ -86,7 +86,7 @@ export default async function MessageThreadPage({ params }: { params: Promise<{ 
   const name = friend.display_name || friend.username || "Movie friend";
 
   return (
-    <div className="fixed inset-x-0 bottom-[5.35rem] top-0 z-20 flex flex-col overflow-hidden border-y border-white/[0.06] bg-[#05050a] shadow-2xl shadow-black/40 md:bottom-0 md:left-64 md:right-0 md:border-y-0 md:border-l">
+    <div className="mx-auto flex min-h-[calc(100dvh-7rem)] max-w-5xl flex-col overflow-hidden rounded-[2rem] border border-white/[0.06] bg-[#05050a] shadow-2xl shadow-black/40 md:min-h-[calc(100dvh-2rem)]">
       <header className="flex items-center justify-between gap-3 border-b border-white/[0.06] bg-[#05050a]/95 px-4 py-4 backdrop-blur-2xl">
         <div className="flex min-w-0 items-center gap-3">
           <Link href="/messages" className="rounded-full p-2 text-[#ff3b5c] transition hover:bg-white/[0.06]" aria-label="Back to messages">
@@ -100,7 +100,7 @@ export default async function MessageThreadPage({ params }: { params: Promise<{ 
         </div>
       </header>
 
-      <main className="flex-1 overflow-y-auto bg-[radial-gradient(circle_at_top_right,rgba(255,59,92,0.12),transparent_28rem),#05050a] px-4 py-6">
+      <main className="min-h-0 flex-1 overflow-y-auto bg-[radial-gradient(circle_at_top_right,rgba(255,59,92,0.12),transparent_28rem),#05050a] px-4 py-6">
         <div className="mx-auto mb-6 w-fit rounded-full border border-white/[0.06] bg-white/[0.055] px-5 py-2 text-sm text-zinc-400">
           Today
         </div>

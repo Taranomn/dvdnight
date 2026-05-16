@@ -31,12 +31,13 @@ const desktopMoreItems: NavItem[] = [
 
 const mobileItems: NavItem[] = [
   { href: "/", label: "Home", icon: Home },
-  { href: "/search", label: "Search", icon: Search },
   { href: "/explore", label: "Explore", icon: Compass },
+  { href: "/lists/trending", label: "Lists", icon: Menu },
   { href: "/watchlist", label: "Want", icon: Heart },
 ];
 
 const mobileMoreItems: NavItem[] = [
+  { href: "/search", label: "Search", icon: Search },
   { href: "/friends", label: "Friends", icon: Users },
   { href: "/messages", label: "Messages", icon: MessageCircle },
   { href: "/match", label: "Match", icon: Shuffle },
@@ -169,35 +170,13 @@ export function MobileNavItems({ isAdmin = false }: { isAdmin?: boolean }) {
   const pathname = usePathname();
   const [moreOpen, setMoreOpen] = useState(false);
   const visibleMoreItems = mobileMoreItems.filter((item) => !item.adminOnly || isAdmin);
-  const browseActive = browseItems.some((item) => isActive(pathname, item.href));
-  const moreActive = visibleMoreItems.some((item) => isActive(pathname, item.href)) || browseActive;
+  const moreActive = visibleMoreItems.some((item) => isActive(pathname, item.href));
 
   return (
     <div className="relative">
       {moreOpen ? (
-        <div className="absolute bottom-[calc(100%+0.7rem)] right-0 max-h-[70dvh] w-72 overflow-y-auto rounded-3xl border border-white/10 bg-[#0b0f1a]/95 p-2 shadow-2xl shadow-black/60 backdrop-blur-2xl">
-          <div className="px-3 py-2 text-xs font-bold uppercase tracking-[0.2em] text-zinc-500">Movie Shelves</div>
-          <div className="grid gap-1">
-            {browseItems.map((item) => {
-              const Icon = item.icon;
-              const active = isActive(pathname, item.href);
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setMoreOpen(false)}
-                  className={cn(
-                    "flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-semibold text-zinc-300 transition hover:bg-white/[0.06] hover:text-white",
-                    active && "bg-[#ff3b5c]/15 text-[#ff3b5c]",
-                  )}
-                >
-                  <Icon className={cn("h-4 w-4", active && "fill-current")} />
-                  {item.label}
-                </Link>
-              );
-            })}
-          </div>
-          <div className="mt-2 px-3 py-2 text-xs font-bold uppercase tracking-[0.2em] text-zinc-500">Social</div>
+        <div className="absolute bottom-[calc(100%+0.7rem)] right-0 max-h-[70dvh] w-60 overflow-y-auto rounded-3xl border border-white/10 bg-[#0b0f1a]/95 p-2 shadow-2xl shadow-black/60 backdrop-blur-2xl">
+          <div className="px-3 py-2 text-xs font-bold uppercase tracking-[0.2em] text-zinc-500">More</div>
           <div className="grid gap-1">
             {visibleMoreItems.map((item) => {
               const Icon = item.icon;
@@ -223,7 +202,7 @@ export function MobileNavItems({ isAdmin = false }: { isAdmin?: boolean }) {
       <div className="grid grid-cols-5 gap-1">
         {mobileItems.map((item) => {
           const Icon = item.icon;
-          const active = isActive(pathname, item.href);
+          const active = item.href === "/lists/trending" ? pathname.startsWith("/lists") : isActive(pathname, item.href);
           return (
             <Link
               key={item.href}

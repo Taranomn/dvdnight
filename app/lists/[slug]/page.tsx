@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { InfiniteMovieGrid } from "@/components/InfiniteMovieGrid";
+import { MobilePlaylistBrowser } from "@/components/MobilePlaylistBrowser";
 import { discoverMovies, enrichMoviesWithRatings, getImdbRatedMovies, getNowPlayingMovies, getPopularMovies, getTopRatedMovies, getTrendingMovies, getUpcomingMovies } from "@/lib/movies";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import type { StoredMovie } from "@/types/movie";
@@ -54,6 +55,12 @@ const builtInLists = {
     loader: () => discoverMovies({ sort_by: "popularity.desc", with_genres: "27,53,878" }),
   },
 };
+
+const mobilePlaylistCategories = Object.entries(builtInLists).map(([slug, list]) => ({
+  slug,
+  title: list.title,
+  description: list.description,
+}));
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
@@ -118,18 +125,23 @@ export default async function ListPage({ params }: { params: Promise<{ slug: str
       })),
     };
     return (
-      <div className="mx-auto max-w-7xl px-4 md:px-8">
+      <>
         <script
           type="application/ld+json"
           suppressHydrationWarning
           dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }}
         />
-        <h1 className="text-4xl font-black">{builtIn.title}</h1>
-        <p className="mt-2 max-w-2xl text-zinc-400">{builtIn.description}</p>
-        <div className="mt-8">
-          <InfiniteMovieGrid initialMovies={movies} list={slug} />
+        <div className="md:hidden">
+          <MobilePlaylistBrowser categories={mobilePlaylistCategories} initialSlug={slug} initialMovies={movies} />
         </div>
-      </div>
+        <div className="mx-auto hidden max-w-7xl px-4 md:block md:px-8">
+          <h1 className="text-4xl font-black">{builtIn.title}</h1>
+          <p className="mt-2 max-w-2xl text-zinc-400">{builtIn.description}</p>
+          <div className="mt-8">
+            <InfiniteMovieGrid initialMovies={movies} list={slug} />
+          </div>
+        </div>
+      </>
     );
   }
 

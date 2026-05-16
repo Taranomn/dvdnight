@@ -141,6 +141,13 @@ export async function dislikeMovieAction(tmdbId: number, source = "manual") {
   revalidatePath(`/movies/${tmdbId}`);
 }
 
+export async function favoriteMovieAction(tmdbId: number) {
+  const user = await requireUser();
+  await saveMovieInteractionByTmdbId(user.id, tmdbId, "liked", "explore");
+  revalidatePath("/explore");
+  revalidatePath(`/movies/${tmdbId}`);
+}
+
 export async function notInterestedMovieAction(tmdbId: number, source = "manual") {
   const user = await requireUser();
   await saveMovieInteractionByTmdbId(user.id, tmdbId, "not_interested", source);

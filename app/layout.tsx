@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Movie Night",
-  description: "A cinematic social watchlist matcher for movie nights.",
+  description: "A cinematic social movie matcher for movie nights.",
 };
 
 export default function RootLayout({

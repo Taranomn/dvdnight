@@ -1,7 +1,7 @@
 "use client";
 
 import { Bookmark, Dices, Plus, Send, Shuffle, Smile, Sparkles, Users } from "lucide-react";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { useFormStatus } from "react-dom";
 import {
   sendDirectMessageAction,
@@ -21,13 +21,12 @@ function SendButton() {
 }
 
 export function MessengerComposer({ friendId }: { friendId: string }) {
-  const formRef = useRef<HTMLFormElement>(null);
   const [open, setOpen] = useState(false);
   const actions = [
     { label: "Random Pick", icon: Dices, action: sendRandomCommonMovieAction.bind(null, friendId) },
     { label: "Highest Rated", icon: Sparkles, action: sendHighestRatedCommonMovieAction.bind(null, friendId) },
     { label: "Suggest Common", icon: Users, action: sendMatchInviteAction.bind(null, friendId) },
-    { label: "Watchlist Invite", icon: Bookmark, action: sendWatchlistInviteAction.bind(null, friendId) },
+    { label: "Want List Invite", icon: Bookmark, action: sendWatchlistInviteAction.bind(null, friendId) },
   ];
 
   return (
@@ -53,11 +52,7 @@ export function MessengerComposer({ friendId }: { friendId: string }) {
         </div>
       ) : null}
       <form
-        ref={formRef}
-        action={async (formData) => {
-          await sendDirectMessageAction(friendId, formData);
-          formRef.current?.reset();
-        }}
+        action={sendDirectMessageAction.bind(null, friendId)}
         className="flex items-center gap-2"
       >
         <button

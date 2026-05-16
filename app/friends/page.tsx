@@ -16,7 +16,7 @@ export default async function FriendsPage({ searchParams }: { searchParams: Prom
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <h1 className="text-4xl font-black">Friends</h1>
-            <p className="mt-2 text-zinc-400">Build your movie circle and compare watchlists.</p>
+            <p className="mt-2 text-zinc-400">Tap a friend to see their profile, messages, and matching options.</p>
           </div>
           <Link href="/friends/requests" className="secondary-button px-4 py-3">
             Requests ({requests.incoming.length})

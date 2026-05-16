@@ -7,7 +7,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
     <div className="mx-auto flex min-h-[80vh] max-w-md items-center px-4">
       <div className="glass w-full rounded-[2rem] p-6">
         <h1 className="text-3xl font-black">Welcome back</h1>
-        <p className="mt-2 text-sm text-zinc-400">Log in to sync your watchlist and compare with friends.</p>
+        <p className="mt-2 text-sm text-zinc-400">Log in to sync Want to Watch and compare with friends.</p>
         {error ? <p className="mt-4 rounded-2xl bg-[#ff4b4b]/10 p-3 text-sm text-[#ff4b4b]">{error}</p> : null}
         <form action={loginAction} className="mt-6 space-y-4">
           <input type="hidden" name="redirectTo" value={redirectTo} />

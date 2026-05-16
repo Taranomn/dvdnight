@@ -13,7 +13,7 @@ export default async function DashboardPage() {
       <div className="mt-6 grid gap-5 md:grid-cols-3">
         <Link href="/watchlist" className="glass rounded-3xl p-6">
           <div className="text-4xl font-black">{watchlist.length}</div>
-          <div className="mt-2 text-zinc-400">Saved movies</div>
+          <div className="mt-2 text-zinc-400">Want to Watch</div>
         </Link>
         <Link href="/friends" className="glass rounded-3xl p-6">
           <div className="text-4xl font-black">{friends.length}</div>

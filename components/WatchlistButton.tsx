@@ -43,14 +43,14 @@ export function WatchlistButton({ tmdbId, movieId, inWatchlist, className }: Wat
         }}
       >
         {saved ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-        {isPending ? "Saving..." : saved ? "In Watchlist" : "Add to Watchlist"}
+        {isPending ? "Saving..." : saved ? "Want to Watch" : "Want to Watch"}
         <Bookmark className="h-4 w-4" />
       </button>
       <LoginPromptModal
         open={showPrompt}
         onClose={() => setShowPrompt(false)}
         title="Save this movie"
-        description="Create an account to save movies to your watchlist."
+        description="Create an account to save movies you want to watch."
         actionLabel="Sign Up"
         redirectTo={typeof window !== "undefined" ? window.location.pathname + window.location.search : "/"}
       />

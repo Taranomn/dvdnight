@@ -35,12 +35,23 @@ export async function getExploreRecommendations({
   const watched = watchlist.filter((item) => item.status === "watched").map((item) => item.movies);
   const wishlist = watchlist.filter((item) => item.status !== "watched").map((item) => item.movies);
   const seeds: TasteMovie[] = [
-    ...liked.map((movie) => ({ movie, weight: 7, source: "liked" as const })),
-    ...watched.map((movie) => ({ movie, weight: 5, source: "watched" as const })),
-    ...wishlist.map((movie) => ({ movie, weight: 2, source: "watchlist" as const })),
+    ...liked.map((movie) => ({ movie, weight: 10, source: "liked" as const })),
+    ...watched.map((movie) => ({ movie, weight: 7, source: "watched" as const })),
+    ...wishlist.map((movie) => ({ movie, weight: 3, source: "watchlist" as const })),
   ];
 
-  const seenTmdbIds = new Set(seeds.map((seed) => seed.movie.tmdb_id));
+  const admin = createAdminClient();
+  const { data: blockedRows } = await admin
+    .from("user_movie_interactions")
+    .select("interaction_type, movies(tmdb_id)")
+    .eq("user_id", userId)
+    .in("interaction_type", ["disliked", "onboarding_dislike", "not_interested", "onboarding_not_interested"]);
+  const blockedTmdbIds = new Set(
+    (blockedRows ?? [])
+      .map((row) => (row.movies as { tmdb_id?: number } | null)?.tmdb_id)
+      .filter((id): id is number => typeof id === "number"),
+  );
+  const seenTmdbIds = new Set([...seeds.map((seed) => seed.movie.tmdb_id), ...blockedTmdbIds]);
   const seenMovieIds = new Set([
     ...watchlist.map((item) => item.movie_id),
     ...liked.map((movie) => movie.id),
@@ -119,7 +130,6 @@ export async function getExploreRecommendations({
     });
   });
 
-  const admin = createAdminClient();
   const [{ data: otherWatchlist }, { data: otherLikes }] = await Promise.all([
     admin.from("watchlist").select("user_id, movie_id, status, movies(*)").neq("user_id", userId).limit(1000),
     admin.from("movie_likes").select("user_id, movie_id, movies(*)").neq("user_id", userId).limit(1000),
@@ -133,8 +143,8 @@ export async function getExploreRecommendations({
   for (const row of [...(otherWatchlist ?? []), ...(otherLikes ?? [])]) {
     const movie = row.movies as unknown as StoredMovie | null;
     const overlap = userOverlap.get(row.user_id as string) ?? 0;
-    if (!movie || overlap === 0 || seenMovieIds.has(row.movie_id as string) || seenTmdbIds.has(movie.tmdb_id)) continue;
-    addScore(scores, movie, 45 + overlap * 22 + (movie.imdb_rating ?? movie.tmdb_rating ?? 0) * 2);
+    if (!movie || overlap < 2 || seenMovieIds.has(row.movie_id as string) || seenTmdbIds.has(movie.tmdb_id)) continue;
+    addScore(scores, movie, 35 + overlap * 28 + (movie.imdb_rating ?? movie.tmdb_rating ?? 0) * 2.5);
   }
 
   const jitter = refresh ? Number.parseInt(refresh.slice(-5), 10) || 0 : 0;

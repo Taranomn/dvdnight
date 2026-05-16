@@ -19,7 +19,10 @@ export function ExploreModes({
   return (
     <section className="mt-8">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-2xl font-bold">Because of your taste</h2>
+        <div>
+          <h2 className="text-2xl font-bold">Recommended For You</h2>
+          <p className="mt-1 text-sm text-zinc-500">Updated from your likes, watched movies, saved picks, and similar users.</p>
+        </div>
         <div className="glass grid grid-cols-2 rounded-2xl p-1">
           <button
             onClick={() => setMode("grid")}

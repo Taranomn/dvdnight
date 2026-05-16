@@ -23,7 +23,7 @@ function MovieSection({ title, slug, movies }: { title: string; slug: string; mo
         </Link>
       </div>
       {movies.length ? (
-        <MovieGrid movies={movies.slice(0, 12)} />
+        <MovieGrid movies={movies.slice(0, 5)} className="xl:grid-cols-5 2xl:grid-cols-5" />
       ) : (
         <div className="glass rounded-3xl p-6 text-sm text-zinc-400">
           Add TMDB credentials to show {title.toLowerCase()}.
@@ -56,20 +56,20 @@ export default async function Home() {
         </button>
       </header>
       <MovieSection title="Latest in Theaters" slug="now-playing" movies={latest} />
-      <section className="mt-6 overflow-hidden rounded-[2rem] border border-white/10 bg-[#0b0f1a] p-6 md:p-8">
-        <p className="text-sm font-bold uppercase tracking-[0.25em] text-[#ff3b5c]">Movie Night</p>
-        <h1 className="mt-3 max-w-3xl text-4xl font-black tracking-normal md:text-6xl">
+      <section className="mt-6 overflow-hidden rounded-[1.5rem] border border-white/10 bg-[#0b0f1a] p-5">
+        <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#ff3b5c]">Movie Night</p>
+        <h1 className="mt-2 max-w-3xl text-2xl font-black tracking-normal md:text-4xl">
           Find the movie both of you actually want to watch.
         </h1>
-        <p className="mt-4 max-w-2xl text-zinc-400">
-          Browse cinematic picks, save your watchlist, connect with friends, and match on the films you have in common.
+        <p className="mt-3 max-w-2xl text-sm text-zinc-400">
+          Save movies to Want to Watch, connect with friends, and match on the films you have in common.
         </p>
-        <div className="mt-6 flex flex-wrap gap-3">
+        <div className="mt-4 flex flex-wrap gap-3">
           <Link href="/search" className="primary-button px-5 py-3">
             Start Searching
           </Link>
           <Link href="/match" className="secondary-button px-5 py-3">
-            Compare Watchlists
+            Match With Friends
           </Link>
         </div>
       </section>

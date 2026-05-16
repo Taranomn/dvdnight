@@ -53,17 +53,17 @@ export function CompactMovieActions({ tmdbId }: { tmdbId: number }) {
         </button>
       </div>
       <button
-        aria-label="Add to watchlist"
+        aria-label="Add to Want to Watch"
         disabled={isPending}
         onClick={() => run(() => addMovieAction(tmdbId), {
           title: "Save this movie",
-          description: "Create an account to save movies to your watchlist.",
+          description: "Create an account to save movies you want to watch.",
           actionLabel: "Sign Up",
         })}
         className="primary-button min-h-10 min-w-0 px-2 py-2 text-xs leading-tight"
       >
         <Plus className="h-4 w-4 shrink-0" />
-        <span className="truncate">Wishlist</span>
+        <span className="truncate">Want to Watch</span>
       </button>
       <LoginPromptModal
         open={Boolean(prompt)}

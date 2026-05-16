@@ -15,10 +15,10 @@ export default async function MessageThreadPage({ params }: { params: Promise<{ 
   const { friendId } = await params;
   const [friend, messages] = await Promise.all([
     getFriendProfileForMessage(user.id, friendId),
-    getConversation(user.id, friendId),
+    getConversation(user.id, friendId).catch(() => []),
   ]);
   if (!friend) notFound();
-  await markConversationRead(user.id, friendId);
+  await markConversationRead(user.id, friendId).catch(() => undefined);
   const name = friend.display_name || friend.username || "Movie friend";
 
   return (

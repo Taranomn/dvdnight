@@ -15,16 +15,18 @@ type NavItem = {
 
 const desktopItems: NavItem[] = [
   { href: "/", label: "Home", icon: Home },
-  { href: "/search", label: "Search", icon: Search },
   { href: "/explore", label: "Explore", icon: Compass },
-  { href: "/playlists", label: "Playlists", icon: ListMusic },
-  { href: "/watchlist", label: "Watchlist", icon: Heart },
+  { href: "/search", label: "Search", icon: Search },
+  { href: "/watchlist", label: "Want to Watch", icon: Heart },
   { href: "/friends", label: "Friends", icon: Users },
+  { href: "/profile", label: "Profile", icon: UserRound },
+];
+
+const desktopMoreItems: NavItem[] = [
+  { href: "/playlists", label: "Playlists", icon: ListMusic },
   { href: "/messages", label: "Messages", icon: MessageCircle },
   { href: "/match", label: "Match", icon: Shuffle },
   { href: "/groups", label: "Groups", icon: Clapperboard },
-  { href: "/profile", label: "Profile", icon: UserRound },
-  { href: "/profile", label: "Settings", icon: Settings },
   { href: "/admin", label: "Admin", icon: Settings, adminOnly: true },
 ];
 
@@ -32,14 +34,14 @@ const mobileItems: NavItem[] = [
   { href: "/", label: "Home", icon: Home },
   { href: "/search", label: "Search", icon: Search },
   { href: "/explore", label: "Explore", icon: Compass },
-  { href: "/match", label: "Match", icon: Shuffle },
+  { href: "/watchlist", label: "Want", icon: Heart },
 ];
 
 const mobileMoreItems: NavItem[] = [
-  { href: "/watchlist", label: "Watchlist", icon: Heart },
   { href: "/playlists", label: "Playlists", icon: ListMusic },
   { href: "/friends", label: "Friends", icon: Users },
   { href: "/messages", label: "Messages", icon: MessageCircle },
+  { href: "/match", label: "Match", icon: Shuffle },
   { href: "/groups", label: "Groups", icon: Clapperboard },
   { href: "/profile", label: "Profile", icon: UserRound },
   { href: "/admin", label: "Admin", icon: Settings, adminOnly: true },
@@ -53,6 +55,9 @@ function isActive(pathname: string, href: string) {
 export function DesktopNavItems({ isAdmin = false }: { isAdmin?: boolean }) {
   const pathname = usePathname();
   const visibleItems = desktopItems.filter((item) => !item.adminOnly || isAdmin);
+  const visibleMoreItems = desktopMoreItems.filter((item) => !item.adminOnly || isAdmin);
+  const [moreOpen, setMoreOpen] = useState(visibleMoreItems.some((item) => isActive(pathname, item.href)));
+  const moreActive = visibleMoreItems.some((item) => isActive(pathname, item.href));
   return (
     <nav className="space-y-2">
       {visibleItems.map((item) => {
@@ -72,6 +77,38 @@ export function DesktopNavItems({ isAdmin = false }: { isAdmin?: boolean }) {
           </Link>
         );
       })}
+      <button
+        type="button"
+        onClick={() => setMoreOpen((value) => !value)}
+        className={cn(
+          "group flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold text-zinc-300 transition duration-200 hover:-translate-y-0.5 hover:bg-white/[0.06] hover:text-white",
+          (moreOpen || moreActive) && "bg-white/[0.06] text-white",
+        )}
+      >
+        <MoreHorizontal className="h-4 w-4 transition group-hover:scale-110" />
+        More
+      </button>
+      {moreOpen ? (
+        <div className="space-y-1 rounded-2xl border border-white/10 bg-white/[0.03] p-2">
+          {visibleMoreItems.map((item) => {
+            const Icon = item.icon;
+            const active = isActive(pathname, item.href);
+            return (
+              <Link
+                key={`${item.href}-${item.label}`}
+                href={item.href}
+                className={cn(
+                  "flex items-center gap-3 rounded-xl px-3 py-2 text-xs font-semibold text-zinc-400 transition hover:bg-white/[0.06] hover:text-white",
+                  active && "bg-[#ff3b5c]/15 text-[#ff3b5c]",
+                )}
+              >
+                <Icon className={cn("h-4 w-4", active && "fill-current")} />
+                {item.label}
+              </Link>
+            );
+          })}
+        </div>
+      ) : null}
     </nav>
   );
 }

@@ -18,7 +18,7 @@ export default async function FriendRequestsPage() {
         {requests.incoming.length ? (
           requests.incoming.map((request) => <FriendRequestCard key={request.id} request={request} />)
         ) : (
-          <EmptyState title="No pending requests" message="When someone wants to match watchlists, their request will appear here." />
+          <EmptyState title="No pending requests" message="When someone wants to match movie lists, their request will appear here." />
         )}
       </div>
       {requests.outgoing.length ? (

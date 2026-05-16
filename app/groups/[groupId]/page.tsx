@@ -45,7 +45,7 @@ export default async function GroupPage({ params }: { params: Promise<{ groupId:
         {movies.length ? (
           movies.map((movie) => <CommonMovieCard key={movie.id} movie={movie} />)
         ) : (
-          <EmptyState title="No group matches yet" message="Everyone needs at least one shared movie on their watchlists." />
+          <EmptyState title="No group matches yet" message="Everyone needs at least one shared movie in Want to Watch." />
         )}
       </div>
     </div>

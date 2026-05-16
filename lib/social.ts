@@ -106,9 +106,8 @@ export async function createMovieComment(userId: string, tmdbId: number, body: s
 }
 
 export async function getConversation(userId: string, friendId: string) {
-  const supabase = await createServerSupabaseClient();
-  if (!supabase) return [];
-  const { data, error } = await supabase
+  const admin = createAdminClient();
+  const { data, error } = await admin
     .from("direct_messages")
     .select("*, sender:profiles!direct_messages_sender_id_fkey(*), receiver:profiles!direct_messages_receiver_id_fkey(*)")
     .or(`and(sender_id.eq.${userId},receiver_id.eq.${friendId}),and(sender_id.eq.${friendId},receiver_id.eq.${userId})`)
@@ -166,11 +165,23 @@ export async function getFriendProfileForMessage(userId: string, friendId: strin
   return profile as Profile | null;
 }
 
+async function assertCanMessage(senderId: string, receiverId: string) {
+  const admin = createAdminClient();
+  const { data } = await admin
+    .from("friendships")
+    .select("id")
+    .eq("user_id", senderId)
+    .eq("friend_id", receiverId)
+    .maybeSingle();
+  return Boolean(data);
+}
+
 export async function sendDirectMessage(senderId: string, receiverId: string, body: string) {
   const text = body.trim();
   if (!text) return;
-  const supabase = await createServerSupabaseClient();
-  const { error } = await supabase!.from("direct_messages").insert({
+  if (!(await assertCanMessage(senderId, receiverId))) throw new Error("You can only message friends.");
+  const admin = createAdminClient();
+  const { error } = await admin.from("direct_messages").insert({
     sender_id: senderId,
     receiver_id: receiverId,
     body: text.slice(0, 1000),
@@ -179,9 +190,9 @@ export async function sendDirectMessage(senderId: string, receiverId: string, bo
 }
 
 export async function markConversationRead(userId: string, friendId: string) {
-  const supabase = await createServerSupabaseClient();
-  await supabase
-    ?.from("direct_messages")
+  const admin = createAdminClient();
+  await admin
+    .from("direct_messages")
     .update({ read_at: new Date().toISOString() })
     .eq("sender_id", friendId)
     .eq("receiver_id", userId)

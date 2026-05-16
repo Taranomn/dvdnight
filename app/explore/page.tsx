@@ -4,7 +4,6 @@ import { ExploreModes } from "@/components/ExploreModes";
 import { ExploreSignalPanel } from "@/components/ExploreSignalPanel";
 import { MovieGrid } from "@/components/MovieGrid";
 import { MovieSearchBar } from "@/components/MovieSearchBar";
-import { generateExploreSections } from "@/lib/recommendations";
 import { getExploreRecommendations } from "@/lib/explore";
 import { enrichMoviesWithRatings, getPopularMovies, getTopRatedMovies, getTrendingMovies, getUpcomingMovies } from "@/lib/movies";
 import { createServerSupabaseClient, getSessionUser } from "@/lib/supabase/server";
@@ -46,10 +45,7 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
     ? await supabase.from("profiles").select("onboarding_completed,onboarding_skipped").eq("id", user.id).maybeSingle()
     : { data: null };
   const [watchlist, liked] = await Promise.all([getUserWatchlist(user.id), getLikedMovies(user.id)]);
-  const [{ recommendations, topGenres }, sections] = await Promise.all([
-    getExploreRecommendations({ userId: user.id, watchlist, liked, refresh }),
-    generateExploreSections(user.id).catch(() => []),
-  ]);
+  const { recommendations, topGenres } = await getExploreRecommendations({ userId: user.id, watchlist, liked, refresh });
   const enrichedRecommendations = await enrichMoviesWithRatings(recommendations, 18);
   const watched = watchlist.filter((item) => item.status === "watched");
   const tasteKey = `${watchlist.length}-${liked.length}-${watched.length}-${refresh}-${topGenres.map(([id, genre]) => `${id}:${genre.count}`).join("|")}`;
@@ -60,7 +56,7 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
         <div>
           <h1 className="text-4xl font-black">Explore</h1>
           <p className="mt-2 max-w-2xl text-zinc-400">
-            Personalized picks based on your watchlist, liked movies, watched history, and genre activity.
+            Personalized picks based on what you like, watched, and saved for later.
           </p>
         </div>
       </div>
@@ -71,16 +67,21 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
         </div>
       ) : null}
 
+      <div className="mt-5 rounded-3xl border border-white/10 bg-white/[0.035] p-4 text-sm text-zinc-300">
+        Movie Night is reading the room: {watched.length ? `${watched.length} watched movies` : "no watched movies yet"}, {liked.length} likes, and no spoilers in the popcorn.
+      </div>
+
       <ExploreSignalPanel
         signals={[
           {
             key: "watchlist",
-            label: "Watchlist signals",
-            helper: "Movies you want to watch.",
-            movies: watchlist.map((item) => item.movies),
+            label: "Want to Watch",
+            helper: "Saved for later.",
+            count: watchlist.filter((item) => item.status !== "watched").length,
+            href: `/profile/${user.id}/lists/want-to-watch`,
           },
-          { key: "liked", label: "Liked movies", helper: "Movies shaping your taste profile.", movies: liked },
-          { key: "watched", label: "Watched movies", helper: "Movies you already finished.", movies: watched.map((item) => item.movies) },
+          { key: "liked", label: "Liked", helper: "Shaping your taste.", count: liked.length, href: `/profile/${user.id}/lists/liked` },
+          { key: "watched", label: "Watched", helper: "Already finished.", count: watched.length, href: `/profile/${user.id}/lists/watched` },
         ]}
       />
 
@@ -93,23 +94,15 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
       </div>
 
       {recommendations.length ? (
-        <>
-          {sections.map((section) => (
-            <section key={section.title} className="mt-8">
-              <h2 className="mb-4 text-2xl font-bold">{section.title}</h2>
-              <MovieGrid movies={section.movies.map((item) => item.movie)} actionVariant="compact" />
-            </section>
-          ))}
-          <ExploreModes
-            key={tasteKey}
-            movies={enrichedRecommendations}
-            list="popular"
-            params={topGenres.length ? { genre: topGenres.map(([id]) => id).join(","), sort: "vote_average.desc", rating: 6 } : undefined}
-          />
-        </>
+        <ExploreModes
+          key={tasteKey}
+          movies={enrichedRecommendations}
+          list="popular"
+          params={topGenres.length ? { genre: topGenres.map(([id]) => id).join(","), sort: "vote_average.desc", rating: 6 } : undefined}
+        />
       ) : (
         <section className="mt-8">
-          <EmptyState title="No recommendations yet" message="Like movies, mark some as watched, and build your watchlist to personalize Explore." href="/search" action="Find movies" />
+          <EmptyState title="No recommendations yet" message="Like movies, mark some as watched, and build Want to Watch to personalize Explore." href="/search" action="Find movies" />
         </section>
       )}
     </div>

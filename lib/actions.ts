@@ -335,7 +335,7 @@ export async function sendRandomCommonMovieAction(receiverId: string) {
   const movie = pickRandomMovie(common);
   const body = movie
     ? `Random pick for us: ${movie.title}${movie.release_year ? ` (${movie.release_year})` : ""}\n/movies/${movie.tmdb_id}`
-    : "We do not have common watchlist movies yet. Let's add more and match again.";
+    : "We do not have common Want to Watch movies yet. Let's add more and match again.";
   await sendDirectMessage(user.id, receiverId, body);
   revalidatePath(`/messages/${receiverId}`);
   revalidatePath("/messages");
@@ -347,7 +347,7 @@ export async function sendHighestRatedCommonMovieAction(receiverId: string) {
   const movie = pickHighestRatedMovie(common);
   const body = movie
     ? `Highest-rated common pick: ${movie.title}${movie.release_year ? ` (${movie.release_year})` : ""}\n/movies/${movie.tmdb_id}`
-    : "We do not have a highest-rated common movie yet. Let's build our watchlists first.";
+    : "We do not have a highest-rated common movie yet. Let's build our Want to Watch lists first.";
   await sendDirectMessage(user.id, receiverId, body);
   revalidatePath(`/messages/${receiverId}`);
   revalidatePath("/messages");
@@ -355,14 +355,14 @@ export async function sendHighestRatedCommonMovieAction(receiverId: string) {
 
 export async function sendMatchInviteAction(receiverId: string) {
   const user = await requireUser();
-  await sendDirectMessage(user.id, receiverId, `Let's compare our watchlists:\n/match/${receiverId}`);
+  await sendDirectMessage(user.id, receiverId, `Let's compare what we want to watch:\n/match/${receiverId}`);
   revalidatePath(`/messages/${receiverId}`);
   revalidatePath("/messages");
 }
 
 export async function sendWatchlistInviteAction(receiverId: string) {
   const user = await requireUser();
-  await sendDirectMessage(user.id, receiverId, `Check out my movie profile and watchlist:\n/profile/${user.id}`);
+  await sendDirectMessage(user.id, receiverId, `Check out my movie profile and Want to Watch list:\n/profile/${user.id}`);
   revalidatePath(`/messages/${receiverId}`);
   revalidatePath("/messages");
 }

@@ -75,7 +75,7 @@ export function ExploreDeck({ initialMovies }: { initialMovies: DisplayMovie[] }
               disabled={isPending}
               onClick={() => startTransition(async () => { await addMovieAction(tmdbId); next(); router.refresh(); })}
             >
-              <Plus className="h-4 w-4" /> Watchlist
+              <Plus className="h-4 w-4" /> Want to Watch
             </button>
             <button
               className="secondary-button px-4 py-3"

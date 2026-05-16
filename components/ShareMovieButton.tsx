@@ -34,8 +34,8 @@ export function ShareMovieButton({
       </button>
 
       {open ? (
-        <div className="fixed inset-0 z-[80] flex items-end justify-center bg-black/70 p-4 backdrop-blur-md sm:items-center">
-          <div className="w-full max-w-md rounded-[1.75rem] border border-white/[0.08] bg-[#0b0f1a] p-4 shadow-2xl shadow-black/70">
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/70 p-4 backdrop-blur-md">
+          <div className="max-h-[min(34rem,calc(100dvh-2rem))] w-full max-w-md overflow-hidden rounded-[1.75rem] border border-white/[0.08] bg-[#0b0f1a] p-4 shadow-2xl shadow-black/70">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <h2 className="text-xl font-black">Share Movie</h2>
@@ -77,6 +77,7 @@ export function ShareMovieButton({
               <div className="mt-3 max-h-72 space-y-2 overflow-y-auto pr-1">
                 {friends.map((friendship) => {
                   const friend = friendship.friend;
+                  if (!friend?.id) return null;
                   const name = friend.display_name || friend.username || "Movie friend";
                   return (
                     <form key={friendship.id} action={shareMovieToFriendAction.bind(null, friend.id, tmdbId)} onSubmit={() => setOpen(false)}>

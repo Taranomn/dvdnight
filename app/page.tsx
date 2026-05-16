@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Bell } from "lucide-react";
 import { MovieGrid } from "@/components/MovieGrid";
 import { MovieSearchBar } from "@/components/MovieSearchBar";
 import { enrichMoviesWithRatings, getNowPlayingMovies, getPopularMovies, getTopRatedMovies, getTrendingMovies } from "@/lib/movies";
@@ -61,9 +60,6 @@ export default async function Home() {
     <div className="mx-auto w-full max-w-7xl px-4 md:px-8">
       <header className="flex items-center gap-4">
         <MovieSearchBar />
-        <button className="glass hidden rounded-2xl p-3 text-zinc-300 sm:block" aria-label="Notifications">
-          <Bell className="h-5 w-5" />
-        </button>
       </header>
       <MovieSection title="Latest in Theaters" slug="now-playing" movies={latest} />
       <section className="mt-6 overflow-hidden rounded-[1.5rem] border border-white/10 bg-[#0b0f1a] p-5">

@@ -1,12 +1,58 @@
+import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Star } from "lucide-react";
 import { MessengerAvatar } from "@/components/MessengerAvatar";
 import { MessengerComposer } from "@/components/MessengerComposer";
+import { RottenTomatoesIcon } from "@/components/RottenTomatoesIcon";
 import { getConversation, getFriendProfileForMessage, getMessageDebugInfo, markConversationRead, resolveMessageFriendId } from "@/lib/social";
-import { requireUser } from "@/lib/supabase/server";
+import { createAdminClient, requireUser } from "@/lib/supabase/server";
+import { formatRating, posterUrl, yearFromDate } from "@/lib/utils";
+import type { StoredMovie } from "@/types/movie";
 
 function formatTime(value: string) {
   return new Date(value).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+}
+
+function getSharedMovieId(body: string) {
+  const match = body.match(/\/movies\/(\d+)/);
+  return match ? Number(match[1]) : null;
+}
+
+function removeMovieLink(body: string) {
+  return body.replace(/\n?\/movies\/\d+/, "").trim();
+}
+
+function ChatMovieCard({ movie }: { movie: StoredMovie }) {
+  const poster = posterUrl(movie.poster_path);
+  return (
+    <Link
+      href={`/movies/${movie.tmdb_id}`}
+      className="mt-3 grid max-w-sm grid-cols-[5.4rem_1fr] gap-3 rounded-2xl border border-[#ff3b5c]/45 bg-[#05050a]/72 p-3 text-left shadow-2xl shadow-black/30 transition hover:-translate-y-0.5 hover:bg-[#ff3b5c]/10"
+    >
+      <div className="relative aspect-[2/3] overflow-hidden rounded-xl border border-white/10 bg-white/[0.04]">
+        {poster ? (
+          <Image src={poster} alt={`${movie.title} poster`} fill sizes="96px" className="object-cover" />
+        ) : (
+          <div className="flex h-full items-center justify-center p-2 text-center text-[0.65rem] text-zinc-500">No poster</div>
+        )}
+      </div>
+      <div className="min-w-0 py-1">
+        <h3 className="line-clamp-2 text-base font-black text-white">{movie.title}</h3>
+        <p className="mt-1 text-xs text-zinc-400">{movie.release_year ?? yearFromDate(movie.release_date) ?? "Year N/A"}</p>
+        <div className="mt-3 flex flex-wrap gap-2 text-xs font-bold">
+          <span className="inline-flex items-center gap-1 text-[#f5c518]">
+            <Star className="h-3.5 w-3.5 fill-current" />
+            {typeof movie.imdb_rating === "number" ? formatRating(movie.imdb_rating) : "N/A"}
+          </span>
+          <span className="inline-flex items-center gap-1 text-[#ff4b4b]">
+            <RottenTomatoesIcon className="h-3.5 w-3.5" />
+            {movie.rotten_tomatoes_rating ?? "N/A"}
+          </span>
+        </div>
+        <p className="mt-3 line-clamp-2 text-xs leading-5 text-zinc-400">{movie.overview ?? "Open movie details"}</p>
+      </div>
+    </Link>
+  );
 }
 
 export default async function MessageThreadPage({ params }: { params: Promise<{ friendId: string }> }) {
@@ -84,6 +130,14 @@ export default async function MessageThreadPage({ params }: { params: Promise<{ 
   }
   await markConversationRead(user.id, resolvedFriendId).catch(() => undefined);
   const name = friend.display_name || friend.username || "Movie friend";
+  const sharedIds = Array.from(new Set(messages.map((message) => getSharedMovieId(message.body)).filter((id): id is number => Boolean(id))));
+  const sharedMovies = new Map<number, StoredMovie>();
+  if (sharedIds.length) {
+    const { data } = await createAdminClient().from("movies").select("*").in("tmdb_id", sharedIds);
+    for (const movie of (data ?? []) as StoredMovie[]) {
+      sharedMovies.set(movie.tmdb_id, movie);
+    }
+  }
 
   return (
     <div className="mx-auto flex min-h-[calc(100dvh-7rem)] max-w-5xl flex-col overflow-hidden rounded-[2rem] border border-white/[0.06] bg-[#05050a] shadow-2xl shadow-black/40 md:min-h-[calc(100dvh-2rem)]">
@@ -107,6 +161,9 @@ export default async function MessageThreadPage({ params }: { params: Promise<{ 
         <div className="space-y-5">
           {messages.map((message) => {
             const mine = message.sender_id === user.id;
+            const sharedMovieId = getSharedMovieId(message.body);
+            const sharedMovie = sharedMovieId ? sharedMovies.get(sharedMovieId) : null;
+            const text = removeMovieLink(message.body);
             return (
               <div key={message.id} className={`flex items-end gap-2 ${mine ? "justify-end" : "justify-start"}`}>
                 {!mine ? <MessengerAvatar profile={friend} size="sm" /> : null}
@@ -115,15 +172,16 @@ export default async function MessageThreadPage({ params }: { params: Promise<{ 
                     className={`rounded-[1.6rem] px-5 py-4 text-lg leading-8 shadow-xl ${
                       mine
                         ? "rounded-br-md bg-gradient-to-br from-[#ff3b5c] to-[#b8153d] text-white shadow-[#ff3b5c]/20"
-                        : "rounded-bl-md border border-white/10 bg-white/[0.075] text-white shadow-black/30"
+                      : "rounded-bl-md border border-white/10 bg-white/[0.075] text-white shadow-black/30"
                     }`}
                   >
-                    {message.body}
+                    {text || (sharedMovie ? "Movie pick" : message.body)}
                     <span className={`ml-3 whitespace-nowrap text-xs ${mine ? "text-white/70" : "text-zinc-500"}`}>
                       {formatTime(message.created_at)}
                       {mine ? " ✓✓" : ""}
                     </span>
                   </div>
+                  {sharedMovie ? <ChatMovieCard movie={sharedMovie} /> : null}
                 </div>
               </div>
             );

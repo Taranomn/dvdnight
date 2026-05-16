@@ -125,7 +125,12 @@ export default async function MovieDetailPage({ params }: { params: Promise<{ tm
         suppressHydrationWarning
         dangerouslySetInnerHTML={{ __html: JSON.stringify(movieJsonLd) }}
       />
-      <MovieDetailHero movie={movie} watchlistState={watchlistState} liked={liked} />
+      <MovieDetailHero
+        movie={movie}
+        watchlistState={watchlistState}
+        liked={liked}
+        shareAction={<ShareMovieButton tmdbId={id} movieTitle={movie.title} friends={friends} signedIn={Boolean(user)} />}
+      />
       <section className="grid gap-6 lg:grid-cols-[1fr_19rem]">
         <div className="order-2 lg:order-1">
           <MovieDetailTabs movie={movie} />
@@ -134,9 +139,6 @@ export default async function MovieDetailPage({ params }: { params: Promise<{ tm
           <CastRail movie={movie} />
         </div>
       </section>
-      <div className="flex justify-end">
-        <ShareMovieButton tmdbId={id} movieTitle={movie.title} friends={friends} signedIn={Boolean(user)} />
-      </div>
       <section>
         <MovieCommunityStats stats={stats} />
       </section>

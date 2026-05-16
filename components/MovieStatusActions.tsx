@@ -1,8 +1,8 @@
 "use client";
 
-import { Heart, CheckCircle2 } from "lucide-react";
+import { Bookmark, Heart, CheckCircle2 } from "lucide-react";
 import { useState, useTransition } from "react";
-import { markWatchedByTmdbAction, setWatchlistStatusAction, toggleMovieLikeAction } from "@/lib/actions";
+import { addMovieAction, markWatchedByTmdbAction, setWatchlistStatusAction, toggleMovieLikeAction } from "@/lib/actions";
 import { cn } from "@/lib/utils";
 import { hasSession } from "@/lib/client-auth";
 import { LoginPromptModal } from "@/components/LoginPromptModal";
@@ -16,7 +16,7 @@ type MovieStatusActionsProps = {
 
 export function MovieStatusActions({ tmdbId, movieId, status, liked }: MovieStatusActionsProps) {
   const [isLiked, setIsLiked] = useState(Boolean(liked));
-  const [currentStatus, setCurrentStatus] = useState(status ?? "want_to_watch");
+  const [currentStatus, setCurrentStatus] = useState<string | null>(status ?? null);
   const [isPending, startTransition] = useTransition();
   const [prompt, setPrompt] = useState<{ title: string; description: string; actionLabel: string } | null>(null);
 
@@ -44,6 +44,27 @@ export function MovieStatusActions({ tmdbId, movieId, status, liked }: MovieStat
         {isLiked ? "Liked" : "Like"}
       </button>
       <button
+        className={cn("secondary-button px-4 py-3", currentStatus === "want_to_watch" && "border-[#ff3b5c]/50 bg-[#ff3b5c]/15 text-[#ff3b5c]")}
+        disabled={isPending}
+        onClick={() => {
+          startTransition(async () => {
+            if (!(await hasSession())) {
+              setPrompt({
+                title: "Save this movie",
+                description: "Create an account to save movies you want to watch.",
+                actionLabel: "Sign Up",
+              });
+              return;
+            }
+            await addMovieAction(tmdbId);
+            setCurrentStatus("want_to_watch");
+          });
+        }}
+      >
+        <Bookmark className={cn("h-4 w-4", currentStatus === "want_to_watch" && "fill-current")} />
+        {currentStatus === "want_to_watch" ? "Want to Watch" : "Want to Watch"}
+      </button>
+      <button
         className={cn("secondary-button px-4 py-3", currentStatus === "watched" && "border-[#00c896]/50 bg-[#00c896]/10 text-[#00c896]")}
         disabled={isPending}
         onClick={() => {
@@ -57,9 +78,8 @@ export function MovieStatusActions({ tmdbId, movieId, status, liked }: MovieStat
               return;
             }
             if (movieId) {
-              const next = currentStatus === "watched" ? "want_to_watch" : "watched";
-              await setWatchlistStatusAction(movieId, next, tmdbId);
-              setCurrentStatus(next);
+              await setWatchlistStatusAction(movieId, "watched", tmdbId);
+              setCurrentStatus("watched");
             } else {
               await markWatchedByTmdbAction(tmdbId);
               setCurrentStatus("watched");
@@ -67,7 +87,7 @@ export function MovieStatusActions({ tmdbId, movieId, status, liked }: MovieStat
           });
         }}
       >
-        <CheckCircle2 className="h-4 w-4" />
+        <CheckCircle2 className={cn("h-4 w-4", currentStatus === "watched" && "fill-current")} />
         {currentStatus === "watched" ? "Watched" : "Mark Watched"}
       </button>
       <LoginPromptModal

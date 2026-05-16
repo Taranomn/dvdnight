@@ -1,20 +1,21 @@
 import Image from "next/image";
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { Calendar, Clock } from "lucide-react";
 import type { FullMovieData } from "@/types/movie";
 import { backdropUrl, formatRuntime, posterUrl } from "@/lib/utils";
 import { RatingBadge } from "@/components/RatingBadge";
 import { TrailerBackground, TrailerTakeoverButton } from "@/components/TrailerTakeover";
-import { WatchlistButton } from "@/components/WatchlistButton";
 import { MovieStatusActions } from "@/components/MovieStatusActions";
 
 type MovieDetailHeroProps = {
   movie: FullMovieData;
   watchlistState: { movie_id: string; status?: string | null } | null;
   liked?: boolean;
+  shareAction?: ReactNode;
 };
 
-export function MovieDetailHero({ movie, watchlistState, liked }: MovieDetailHeroProps) {
+export function MovieDetailHero({ movie, watchlistState, liked, shareAction }: MovieDetailHeroProps) {
   const backdrop = backdropUrl(movie.backdrop_path);
   const poster = posterUrl(movie.poster_path);
 
@@ -75,12 +76,7 @@ export function MovieDetailHero({ movie, watchlistState, liked }: MovieDetailHer
           </p>
           <div className="mt-7 grid gap-3 sm:flex">
             <TrailerTakeoverButton trailerKey={movie.trailer_key} title={movie.title} />
-            <WatchlistButton
-              tmdbId={movie.tmdb_id}
-              movieId={watchlistState?.movie_id}
-              inWatchlist={Boolean(watchlistState)}
-              className="px-5 py-3"
-            />
+            {shareAction}
           </div>
           <div className="mt-4">
             <MovieStatusActions

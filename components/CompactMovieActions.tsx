@@ -81,10 +81,10 @@ export function CompactMovieActions({
           description: "Create an account to remember what you have watched.",
           actionLabel: "Sign Up",
         }, () => setStatus("watched"))}
-          className={cn("secondary-button min-h-10 min-w-0 px-2 py-2 text-xs leading-tight text-[#00c896]", isWatched && "border-[#00c896]/60 bg-[#00c896]/10 shadow-[0_0_18px_rgba(0,200,150,0.14)]")}
+          className="secondary-button min-h-10 min-w-0 px-2 py-2 text-xs leading-tight text-zinc-200"
         >
           <CheckCircle2 className="h-4 w-4 shrink-0" />
-          <span className="truncate">{isWatched ? "Watched" : "Watch"}</span>
+          <span className="truncate">{isWatched ? "Watch Again" : "Watch"}</span>
         </button>
       </div>
       <button
@@ -95,10 +95,10 @@ export function CompactMovieActions({
           description: "Create an account to save movies you want to watch.",
           actionLabel: "Sign Up",
         }, () => setStatus("want_to_watch"))}
-        className={cn("min-h-10 min-w-0 px-2 py-2 text-xs leading-tight", isWanted ? "secondary-button border-[#ff3b5c]/60 bg-[#ff3b5c]/15 text-[#ff3b5c]" : "primary-button")}
+        className={cn("min-h-10 min-w-0 px-2 py-2 text-xs leading-tight", isWanted ? "secondary-button border-white/10 bg-white/[0.045] text-zinc-300" : "primary-button")}
       >
         <Plus className="h-4 w-4 shrink-0" />
-        <span className="truncate">{isWanted ? "Want to Watch" : "Want to Watch"}</span>
+        <span className="truncate">{isWanted ? "Already in Want" : "Want to Watch"}</span>
       </button>
       <LoginPromptModal
         open={Boolean(prompt)}

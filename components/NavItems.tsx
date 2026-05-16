@@ -17,7 +17,7 @@ const desktopItems: NavItem[] = [
   { href: "/", label: "Home", icon: Home },
   { href: "/explore", label: "Explore", icon: Compass },
   { href: "/search", label: "Search", icon: Search },
-  { href: "/watchlist", label: "Want to Watch", icon: Heart },
+  { href: "/watchlist", label: "Watch List", icon: Heart },
   { href: "/friends", label: "Friends", icon: Users },
   { href: "/profile", label: "Profile", icon: UserRound },
 ];
@@ -33,7 +33,7 @@ const mobileItems: NavItem[] = [
   { href: "/", label: "Home", icon: Home },
   { href: "/explore", label: "Explore", icon: Compass },
   { href: "/lists/trending", label: "Lists", icon: Menu },
-  { href: "/watchlist", label: "Want", icon: Heart },
+  { href: "/watchlist", label: "List", icon: Heart },
 ];
 
 const mobileMoreItems: NavItem[] = [

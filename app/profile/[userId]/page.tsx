@@ -4,6 +4,7 @@ import { MessageCircle, Shuffle, UserMinus } from "lucide-react";
 import { MovieGrid } from "@/components/MovieGrid";
 import { removeFriendAction } from "@/lib/actions";
 import { createAdminClient, requireUser } from "@/lib/supabase/server";
+import { isWatchedStatus, isWatchlistStatus } from "@/lib/watchlist";
 import type { StoredMovie, WatchlistItem } from "@/types/movie";
 import type { Profile } from "@/types/user";
 
@@ -36,13 +37,13 @@ export default async function FriendProfilePage({ params }: { params: Promise<{ 
 
   const typedProfile = profile as Profile;
   const watchlist = (watchlistRows ?? []) as WatchlistItem[];
-  const watched = watchlist.filter((item) => item.status === "watched").map((item) => item.movies);
-  const wantToWatch = watchlist.filter((item) => item.status !== "watched").map((item) => item.movies);
+  const watched = watchlist.filter((item) => isWatchedStatus(item.status)).map((item) => item.movies);
+  const savedWatchlist = watchlist.filter((item) => isWatchlistStatus(item.status)).map((item) => item.movies);
   const liked = (likeRows ?? []).map((row) => row.movies).filter(Boolean) as StoredMovie[];
-  const recent = [...watched, ...liked, ...wantToWatch].slice(0, 6);
+  const recent = [...watched, ...liked, ...savedWatchlist].slice(0, 6);
   const name = typedProfile.display_name || typedProfile.username || "Movie friend";
   const stats = [
-    { label: "Want to Watch", value: wantToWatch.length, href: `/profile/${userId}/lists/want-to-watch` },
+    { label: "Watch List", value: savedWatchlist.length, href: `/profile/${userId}/lists/want-to-watch` },
     { label: "Watched", value: watched.length, href: `/profile/${userId}/lists/watched` },
     { label: "Liked", value: liked.length, href: `/profile/${userId}/lists/liked` },
   ];

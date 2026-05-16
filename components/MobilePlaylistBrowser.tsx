@@ -329,12 +329,12 @@ export function MobilePlaylistBrowser({ categories, initialSlug, initialMovies }
                             <ActionButton
                               active={selected.has("want")}
                               disabled={isPending}
-                              label="Want"
+                              label="List"
                               icon={<Bookmark className="h-5 w-5" />}
                               onClick={() =>
                                 runAction("want", () => addMovieAction(tmdbId!), {
                                   title: "Save this movie",
-                                  description: "Create an account to save movies you want to watch.",
+                                  description: "Create an account to save movies to your watch list.",
                                   actionLabel: "Sign Up",
                                 })
                               }

@@ -26,7 +26,7 @@ export function MessengerComposer({ friendId }: { friendId: string }) {
     { label: "Random Pick", icon: Dices, action: sendRandomCommonMovieAction.bind(null, friendId) },
     { label: "Highest Rated", icon: Sparkles, action: sendHighestRatedCommonMovieAction.bind(null, friendId) },
     { label: "Suggest Common", icon: Users, action: sendMatchInviteAction.bind(null, friendId) },
-    { label: "Want List Invite", icon: Bookmark, action: sendWatchlistInviteAction.bind(null, friendId) },
+    { label: "Watch List Invite", icon: Bookmark, action: sendWatchlistInviteAction.bind(null, friendId) },
   ];
 
   return (

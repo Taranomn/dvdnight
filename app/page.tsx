@@ -6,9 +6,9 @@ import { enrichMoviesWithRatings, getNowPlayingMovies, getPopularMovies, getTopR
 import type { DisplayMovie, MovieSummary } from "@/types/movie";
 
 export const metadata: Metadata = {
-  title: "Movie Night | Social Movie Watchlists and Matching",
+  title: "Movie Night | Social Movie Watch Lists and Matching",
   description:
-    "Browse trending movies, see IMDb and Rotten Tomatoes ratings, save films to Want to Watch, and match with friends on what to watch together.",
+    "Browse trending movies, see IMDb and Rotten Tomatoes ratings, save films to Watch List, and match with friends on what to watch together.",
   alternates: {
     canonical: "/",
   },
@@ -68,7 +68,7 @@ export default async function Home() {
           Find the movie both of you actually want to watch.
         </h1>
         <p className="mt-3 max-w-2xl text-sm text-zinc-400">
-          Save movies to Want to Watch, connect with friends, and match on the films you have in common.
+          Save movies to Watch List, connect with friends, and match on the films you have in common.
         </p>
         <div className="mt-4 flex flex-wrap gap-3">
           <Link href="/search" className="primary-button px-5 py-3">

@@ -7,7 +7,7 @@ import { createServerSupabaseClient, requireUser } from "@/lib/supabase/server";
 import { acceptFriendRequest, declineFriendRequest, removeFriend, sendFriendRequest } from "@/lib/friends";
 import { getCommonWatchlist, pickHighestRatedMovie, pickRandomMovie } from "@/lib/match";
 import { upsertMovieByTmdbId } from "@/lib/movies";
-import { addToWatchlist, removeFromWatchlist, saveMovieInteractionByTmdbId, setWatchlistStatus, toggleMovieLike } from "@/lib/watchlist";
+import { addToWatchlist, markWatchedByTmdbId, removeFromWatchlist, saveMovieInteractionByTmdbId, setWatchlistStatus, type WatchlistStatus, toggleMovieLike } from "@/lib/watchlist";
 import { updateUserTasteProfile } from "@/lib/recommendations";
 import { createMovieComment, sendDirectMessage } from "@/lib/social";
 
@@ -110,7 +110,7 @@ export async function removeMovieAction(movieId: string, tmdbId?: number) {
   if (tmdbId) revalidatePath(`/movies/${tmdbId}`);
 }
 
-export async function setWatchlistStatusAction(movieId: string, status: "want_to_watch" | "watched", tmdbId?: number) {
+export async function setWatchlistStatusAction(movieId: string, status: WatchlistStatus, tmdbId?: number) {
   const user = await requireUser();
   await setWatchlistStatus(user.id, movieId, status);
   revalidatePath("/watchlist");
@@ -120,8 +120,7 @@ export async function setWatchlistStatusAction(movieId: string, status: "want_to
 
 export async function markWatchedByTmdbAction(tmdbId: number) {
   const user = await requireUser();
-  const movie = await addToWatchlist(user.id, tmdbId);
-  await setWatchlistStatus(user.id, movie.id, "watched");
+  await markWatchedByTmdbId(user.id, tmdbId);
   revalidatePath("/watchlist");
   revalidatePath("/explore");
   revalidatePath(`/movies/${tmdbId}`);
@@ -342,7 +341,7 @@ export async function sendRandomCommonMovieAction(receiverId: string) {
   const movie = pickRandomMovie(common);
   const body = movie
     ? `Random pick for us: ${movie.title}${movie.release_year ? ` (${movie.release_year})` : ""}\n/movies/${movie.tmdb_id}`
-    : "We do not have common Want to Watch movies yet. Let's add more and match again.";
+    : "We do not have common Watch List movies yet. Let's add more and match again.";
   await sendDirectMessage(user.id, receiverId, body);
   revalidatePath(`/messages/${receiverId}`);
   revalidatePath("/messages");
@@ -354,7 +353,7 @@ export async function sendHighestRatedCommonMovieAction(receiverId: string) {
   const movie = pickHighestRatedMovie(common);
   const body = movie
     ? `Highest-rated common pick: ${movie.title}${movie.release_year ? ` (${movie.release_year})` : ""}\n/movies/${movie.tmdb_id}`
-    : "We do not have a highest-rated common movie yet. Let's build our Want to Watch lists first.";
+    : "We do not have a highest-rated common movie yet. Let's build our Watch Lists first.";
   await sendDirectMessage(user.id, receiverId, body);
   revalidatePath(`/messages/${receiverId}`);
   revalidatePath("/messages");
@@ -362,14 +361,14 @@ export async function sendHighestRatedCommonMovieAction(receiverId: string) {
 
 export async function sendMatchInviteAction(receiverId: string) {
   const user = await requireUser();
-  await sendDirectMessage(user.id, receiverId, `Let's compare what we want to watch:\n/match/${receiverId}`);
+  await sendDirectMessage(user.id, receiverId, `Let's compare our Watch Lists:\n/match/${receiverId}`);
   revalidatePath(`/messages/${receiverId}`);
   revalidatePath("/messages");
 }
 
 export async function sendWatchlistInviteAction(receiverId: string) {
   const user = await requireUser();
-  await sendDirectMessage(user.id, receiverId, `Check out my movie profile and Want to Watch list:\n/profile/${user.id}`);
+  await sendDirectMessage(user.id, receiverId, `Check out my movie profile and Watch List:\n/profile/${user.id}`);
   revalidatePath(`/messages/${receiverId}`);
   revalidatePath("/messages");
 }

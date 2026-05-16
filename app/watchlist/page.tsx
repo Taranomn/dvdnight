@@ -5,7 +5,7 @@ import { MovieCard } from "@/components/MovieCard";
 import { removeMovieAction } from "@/lib/actions";
 import { MovieStatusActions } from "@/components/MovieStatusActions";
 import { requireUser } from "@/lib/supabase/server";
-import { getUserWatchlist } from "@/lib/watchlist";
+import { getUserWatchlist, isWatchlistStatus } from "@/lib/watchlist";
 import { getBestComparableRating } from "@/lib/utils";
 
 export default async function WatchlistPage({
@@ -15,7 +15,8 @@ export default async function WatchlistPage({
 }) {
   const user = await requireUser();
   const { q = "", sort = "created_at", genre = "" } = await searchParams;
-  const items = await getUserWatchlist(user.id);
+  const allItems = await getUserWatchlist(user.id);
+  const items = allItems.filter((item) => isWatchlistStatus(item.status));
   const genres = Array.from(new Set(items.flatMap((item) => item.movies.genres?.map((g) => g.name) ?? []))).sort();
   const filtered = items
     .filter((item) => item.movies.title.toLowerCase().includes(q.toLowerCase()))
@@ -31,7 +32,7 @@ export default async function WatchlistPage({
     <div className="mx-auto max-w-7xl px-4 md:px-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-4xl font-black">Want to Watch</h1>
+          <h1 className="text-4xl font-black">Watch List</h1>
           <p className="mt-2 text-zinc-400">{items.length} movies saved for later</p>
         </div>
         <Link href="/search" className="primary-button px-5 py-3">
@@ -41,7 +42,7 @@ export default async function WatchlistPage({
       <form className="mt-6 grid gap-3 md:grid-cols-[1fr_12rem_12rem]">
         <div className="relative">
           <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
-          <input name="q" defaultValue={q} placeholder="Search movies you want to watch..." className="h-12 w-full rounded-2xl border border-white/10 bg-white/[0.055] pl-11 pr-4 outline-none" />
+          <input name="q" defaultValue={q} placeholder="Search your watch list..." className="h-12 w-full rounded-2xl border border-white/10 bg-white/[0.055] pl-11 pr-4 outline-none" />
         </div>
         <select name="genre" defaultValue={genre} className="h-12 rounded-2xl border border-white/10 bg-[#0b0f1a] px-4">
           <option value="">All genres</option>
@@ -75,7 +76,7 @@ export default async function WatchlistPage({
           </div>
         ) : (
           <EmptyState
-            title="Your Want to Watch list is empty"
+            title="Your Watch List is empty"
             message="Start adding movies to find matches with friends."
             href="/search"
             action="Find movies"

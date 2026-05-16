@@ -24,7 +24,7 @@ export default async function MatchPage() {
             </Link>
           ))
         ) : (
-          <EmptyState title="No friends to match yet" message="Add a friend first, then compare what you both want to watch." href="/friends" action="Find friends" />
+          <EmptyState title="No friends to match yet" message="Add a friend first, then compare your Watch Lists." href="/friends" action="Find friends" />
         )}
       </div>
     </div>

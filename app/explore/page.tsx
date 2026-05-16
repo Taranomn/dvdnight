@@ -8,7 +8,7 @@ import { MovieSearchBar } from "@/components/MovieSearchBar";
 import { getExploreRecommendations } from "@/lib/explore";
 import { enrichMoviesWithRatings, getPopularMovies, getTopRatedMovies, getTrendingMovies, getUpcomingMovies } from "@/lib/movies";
 import { createServerSupabaseClient, getSessionUser } from "@/lib/supabase/server";
-import { getLikedMovies, getUserWatchlist } from "@/lib/watchlist";
+import { getLikedMovies, getUserWatchlist, isWatchedStatus, isWatchlistStatus } from "@/lib/watchlist";
 
 export const metadata: Metadata = {
   title: "Explore Movie Recommendations",
@@ -57,7 +57,7 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
   const [watchlist, liked] = await Promise.all([getUserWatchlist(user.id), getLikedMovies(user.id)]);
   const { recommendations, topGenres } = await getExploreRecommendations({ userId: user.id, watchlist, liked, refresh });
   const enrichedRecommendations = await enrichMoviesWithRatings(recommendations, 18);
-  const watched = watchlist.filter((item) => item.status === "watched");
+  const watched = watchlist.filter((item) => isWatchedStatus(item.status));
   const tasteKey = `${watchlist.length}-${liked.length}-${watched.length}-${refresh}-${topGenres.map(([id, genre]) => `${id}:${genre.count}`).join("|")}`;
 
   return (
@@ -85,9 +85,9 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
         signals={[
           {
             key: "watchlist",
-            label: "Want to Watch",
+            label: "Watch List",
             helper: "Saved for later.",
-            count: watchlist.filter((item) => item.status !== "watched").length,
+            count: watchlist.filter((item) => isWatchlistStatus(item.status)).length,
             href: `/profile/${user.id}/lists/want-to-watch`,
           },
           { key: "liked", label: "Liked", helper: "Shaping your taste.", count: liked.length, href: `/profile/${user.id}/lists/liked` },
@@ -112,7 +112,7 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
         />
       ) : (
         <section className="mt-8">
-          <EmptyState title="No recommendations yet" message="Like movies, mark some as watched, and build Want to Watch to personalize Explore." href="/search" action="Find movies" />
+          <EmptyState title="No recommendations yet" message="Like movies, mark some as watched, and build your Watch List to personalize Explore." href="/search" action="Find movies" />
         </section>
       )}
     </div>

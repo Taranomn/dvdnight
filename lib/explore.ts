@@ -3,6 +3,7 @@ import "server-only";
 import { createAdminClient } from "@/lib/supabase/server";
 import { discoverMovies } from "@/lib/movies";
 import { getMovieCredits, getSmartSimilarMovies } from "@/lib/tmdb";
+import { isWatchedStatus, isWatchlistStatus } from "@/lib/watchlist";
 import type { MovieSummary, StoredMovie, WatchlistItem } from "@/types/movie";
 
 type TasteMovie = {
@@ -32,12 +33,12 @@ export async function getExploreRecommendations({
   liked: StoredMovie[];
   refresh?: string;
 }) {
-  const watched = watchlist.filter((item) => item.status === "watched").map((item) => item.movies);
-  const wishlist = watchlist.filter((item) => item.status !== "watched").map((item) => item.movies);
+  const watched = watchlist.filter((item) => isWatchedStatus(item.status)).map((item) => item.movies);
+  const savedWatchlist = watchlist.filter((item) => isWatchlistStatus(item.status)).map((item) => item.movies);
   const seeds: TasteMovie[] = [
     ...liked.map((movie) => ({ movie, weight: 10, source: "liked" as const })),
     ...watched.map((movie) => ({ movie, weight: 7, source: "watched" as const })),
-    ...wishlist.map((movie) => ({ movie, weight: 3, source: "watchlist" as const })),
+    ...savedWatchlist.map((movie) => ({ movie, weight: 3, source: "watchlist" as const })),
   ];
 
   const admin = createAdminClient();

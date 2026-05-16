@@ -4,12 +4,13 @@ import { ArrowLeft } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
 import { MovieGrid } from "@/components/MovieGrid";
 import { createAdminClient, requireUser } from "@/lib/supabase/server";
+import { isWatchedStatus, isWatchlistStatus } from "@/lib/watchlist";
 import type { StoredMovie, WatchlistItem } from "@/types/movie";
 import type { Profile } from "@/types/user";
 
 const listMeta = {
   "want-to-watch": {
-    title: "Want to Watch",
+    title: "Watch List",
     empty: "No movies saved for later yet.",
   },
   watched: {
@@ -60,7 +61,7 @@ export default async function ProfileMovieListPage({
     type === "liked"
       ? ((likeRows ?? []).map((row) => row.movies).filter(Boolean) as StoredMovie[])
       : watchlist
-          .filter((item) => (type === "watched" ? item.status === "watched" : item.status !== "watched"))
+          .filter((item) => (type === "watched" ? isWatchedStatus(item.status) : isWatchlistStatus(item.status)))
           .map((item) => item.movies);
 
   return (

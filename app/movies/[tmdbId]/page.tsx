@@ -34,7 +34,7 @@ export async function generateMetadata({ params }: { params: Promise<{ tmdbId: s
     const title = `${movie.title}${movie.release_year ? ` (${movie.release_year})` : ""}`;
     const description =
       movie.overview ??
-      `Watch trailers, browse cast, see ratings, and save ${movie.title} to Want to Watch on Movie Night.`;
+      `Watch trailers, browse cast, see ratings, and save ${movie.title} to Watch List on Movie Night.`;
     const imagePath = movie.backdrop_path ?? movie.poster_path;
     const imageUrl = imagePath ? `${imageBaseUrl}/${movie.backdrop_path ? "original" : "w500"}${imagePath}` : undefined;
 

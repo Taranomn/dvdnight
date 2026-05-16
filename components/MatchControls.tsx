@@ -35,7 +35,7 @@ export function MatchControls({ movies }: { movies: StoredMovie[] }) {
           className="primary-button px-4 py-3"
           onClick={() => {
             setSelected(movies[Math.floor(Math.random() * movies.length)]);
-            setReason("Randomly selected from your shared Want to Watch list");
+            setReason("Randomly selected from your shared Watch List");
           }}
         >
           <Dices className="h-4 w-4" />
@@ -80,7 +80,7 @@ export function MatchControls({ movies }: { movies: StoredMovie[] }) {
                   className="primary-button px-4 py-3"
                   onClick={() => {
                     setSelected(movies[Math.floor(Math.random() * movies.length)]);
-                    setReason("Randomly selected from your shared Want to Watch list");
+                    setReason("Randomly selected from your shared Watch List");
                   }}
                 >
                   Again

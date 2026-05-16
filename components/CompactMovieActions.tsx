@@ -55,8 +55,8 @@ export function CompactMovieActions({
     });
   }
 
-  const isWatched = status === "watched";
-  const isWanted = status === "want_to_watch";
+  const isWatched = status === "watched" || status === "watched_watchlist";
+  const isInWatchlist = status === "want_to_watch" || status === "watched_watchlist";
 
   return (
     <div className="mt-3 grid gap-2">
@@ -88,20 +88,20 @@ export function CompactMovieActions({
         </button>
       </div>
       <button
-        aria-label="Add to Want to Watch"
+        aria-label="Add to Watch List"
         disabled={isPending}
         onClick={() => run(() => addMovieAction(tmdbId), {
           title: "Save this movie",
-          description: "Create an account to save movies you want to watch.",
+          description: "Create an account to save movies to your watch list.",
           actionLabel: "Sign Up",
-        }, () => setStatus("want_to_watch"))}
+        }, () => setStatus(isWatched ? "watched_watchlist" : "want_to_watch"))}
         className={cn(
           "min-h-10 min-w-0 px-2 py-2 text-xs leading-tight",
-          isWatched || isWanted ? "secondary-button border-white/10 bg-white/[0.045] text-zinc-300" : "primary-button",
+          isWatched || isInWatchlist ? "secondary-button border-white/10 bg-white/[0.045] text-zinc-300" : "primary-button",
         )}
       >
         {isWatched ? <RotateCcw className="h-4 w-4 shrink-0" /> : <Plus className="h-4 w-4 shrink-0" />}
-        <span className="truncate">{isWatched ? "Watch Again" : isWanted ? "Already in Want" : "Want to Watch"}</span>
+        <span className="truncate">{isWatched && !isInWatchlist ? "Watch Again" : isInWatchlist ? "Added to Watch List" : "Watch List"}</span>
       </button>
       <LoginPromptModal
         open={Boolean(prompt)}

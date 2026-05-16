@@ -1,19 +1,20 @@
 import Link from "next/link";
 import { getFriends } from "@/lib/friends";
 import { requireUser } from "@/lib/supabase/server";
-import { getUserWatchlist } from "@/lib/watchlist";
+import { getUserWatchlist, isWatchlistStatus } from "@/lib/watchlist";
 
 export default async function DashboardPage() {
   const user = await requireUser();
   const [watchlist, friends] = await Promise.all([getUserWatchlist(user.id), getFriends(user.id)]);
+  const savedCount = watchlist.filter((item) => isWatchlistStatus(item.status)).length;
 
   return (
     <div className="mx-auto max-w-7xl px-4 md:px-8">
       <h1 className="text-4xl font-black">Dashboard</h1>
       <div className="mt-6 grid gap-5 md:grid-cols-3">
         <Link href="/watchlist" className="glass rounded-3xl p-6">
-          <div className="text-4xl font-black">{watchlist.length}</div>
-          <div className="mt-2 text-zinc-400">Want to Watch</div>
+          <div className="text-4xl font-black">{savedCount}</div>
+          <div className="mt-2 text-zinc-400">Watch List</div>
         </Link>
         <Link href="/friends" className="glass rounded-3xl p-6">
           <div className="text-4xl font-black">{friends.length}</div>

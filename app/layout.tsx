@@ -23,10 +23,10 @@ export const metadata: Metadata = {
     template: "%s | Movie Night",
   },
   description:
-    "Browse movies, watch trailers, save films to Want to Watch, and match with friends on what to watch together.",
+    "Browse movies, watch trailers, save films to your Watch List, and match with friends on what to watch together.",
   keywords: [
     "movie night",
-    "movie watchlist",
+    "movie watch list",
     "movie recommendations",
     "watch movies with friends",
     "movie matcher",
@@ -45,7 +45,7 @@ export const metadata: Metadata = {
     siteName: "Movie Night",
     title: "Movie Night | Find Movies to Watch Together",
     description:
-      "Browse movies, save films to Want to Watch, and match with friends on what to watch together.",
+      "Browse movies, save films to your Watch List, and match with friends on what to watch together.",
   },
   twitter: {
     card: "summary_large_image",

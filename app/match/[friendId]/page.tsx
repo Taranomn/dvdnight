@@ -23,7 +23,7 @@ export default async function FriendMatchPage({ params }: { params: Promise<{ fr
         {movies.length ? (
           movies.map((movie) => <CommonMovieCard key={movie.id} movie={movie} />)
         ) : (
-          <EmptyState title="No common movies yet" message="Add more movies to Want to Watch to find a match." href="/search" action="Add movies" />
+          <EmptyState title="No common movies yet" message="Add more movies to Watch List to find a match." href="/search" action="Add movies" />
         )}
       </div>
     </div>

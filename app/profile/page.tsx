@@ -5,7 +5,7 @@ import { ProfileImageUploader } from "@/components/ProfileImageUploader";
 import { logoutAction, updateProfileAction } from "@/lib/actions";
 import { getFriends } from "@/lib/friends";
 import { createAdminClient, createServerSupabaseClient, requireUser } from "@/lib/supabase/server";
-import { getLikedMovies, getUserWatchlist } from "@/lib/watchlist";
+import { getLikedMovies, getUserWatchlist, isWatchedStatus, isWatchlistStatus } from "@/lib/watchlist";
 
 export default async function ProfilePage() {
   const user = await requireUser();
@@ -18,13 +18,13 @@ export default async function ProfilePage() {
     getLikedMovies(user.id),
     admin.from("movie_comments").select("id", { count: "exact", head: true }).eq("user_id", user.id),
   ]);
-  const watched = watchlist.filter((item) => item.status === "watched").map((item) => item.movies);
-  const wantToWatch = watchlist.filter((item) => item.status !== "watched").map((item) => item.movies);
+  const watched = watchlist.filter((item) => isWatchedStatus(item.status)).map((item) => item.movies);
+  const savedWatchlist = watchlist.filter((item) => isWatchlistStatus(item.status)).map((item) => item.movies);
   const genres = Array.from(new Set(watchlist.flatMap((item) => item.movies.genres?.map((genre) => genre.name) ?? []))).slice(0, 6);
-  const recent = [...watched, ...liked, ...wantToWatch].slice(0, 6);
+  const recent = [...watched, ...liked, ...savedWatchlist].slice(0, 6);
 
   const statCards = [
-    { label: "Want to Watch", value: wantToWatch.length, href: `/profile/${user.id}/lists/want-to-watch` },
+    { label: "Watch List", value: savedWatchlist.length, href: `/profile/${user.id}/lists/want-to-watch` },
     { label: "Watched", value: watched.length, href: `/profile/${user.id}/lists/watched` },
     { label: "Liked", value: liked.length, href: `/profile/${user.id}/lists/liked` },
   ];

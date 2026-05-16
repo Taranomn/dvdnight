@@ -5,6 +5,16 @@ import { upsertMovieByTmdbId } from "@/lib/movies";
 import { updateUserTasteProfile } from "@/lib/recommendations";
 import type { WatchlistItem } from "@/types/movie";
 
+export type WatchlistStatus = "want_to_watch" | "watched" | "watched_watchlist";
+
+export function isWatchedStatus(status?: string | null) {
+  return status === "watched" || status === "watched_watchlist";
+}
+
+export function isWatchlistStatus(status?: string | null) {
+  return status === "want_to_watch" || status === "watched_watchlist";
+}
+
 export async function logActivity(userId: string, type: string, movieId?: string | null, metadata?: Record<string, unknown>) {
   const admin = createAdminClient();
   await admin.from("user_activity").insert({
@@ -29,14 +39,21 @@ export async function logInteraction(userId: string, movieId: string, interactio
 export async function addToWatchlist(userId: string, tmdbId: number) {
   const movie = await upsertMovieByTmdbId(tmdbId);
   const admin = createAdminClient();
-  const { error } = await admin.from("watchlist").upsert(
-    {
+  const { data: existing } = await admin
+    .from("watchlist")
+    .select("id,status")
+    .eq("user_id", userId)
+    .eq("movie_id", movie.id)
+    .maybeSingle();
+
+  const nextStatus: WatchlistStatus = existing?.status === "watched" ? "watched_watchlist" : "want_to_watch";
+  const { error } = existing
+    ? await admin.from("watchlist").update({ status: existing.status === "watched_watchlist" ? "watched_watchlist" : nextStatus }).eq("id", existing.id)
+    : await admin.from("watchlist").insert({
       user_id: userId,
       movie_id: movie.id,
-      status: "want_to_watch",
-    },
-    { onConflict: "user_id,movie_id" },
-  );
+      status: nextStatus,
+    });
 
   if (error) throw new Error(error.message);
   await logActivity(userId, "watchlist_added", movie.id, { tmdb_id: tmdbId });
@@ -47,18 +64,46 @@ export async function addToWatchlist(userId: string, tmdbId: number) {
 export async function removeFromWatchlist(userId: string, movieId: string) {
   const supabase = await createServerSupabaseClient();
   if (!supabase) throw new Error("Supabase is not configured.");
-  const { error } = await supabase.from("watchlist").delete().eq("user_id", userId).eq("movie_id", movieId);
+  const { data: existing } = await supabase
+    .from("watchlist")
+    .select("id,status")
+    .eq("user_id", userId)
+    .eq("movie_id", movieId)
+    .maybeSingle();
+  const { error } = existing?.status === "watched_watchlist"
+    ? await supabase.from("watchlist").update({ status: "watched" }).eq("id", existing.id)
+    : await supabase.from("watchlist").delete().eq("user_id", userId).eq("movie_id", movieId);
   if (error) throw new Error(error.message);
   await logActivity(userId, "watchlist_removed", movieId);
 }
 
-export async function setWatchlistStatus(userId: string, movieId: string, status: "want_to_watch" | "watched") {
+export async function setWatchlistStatus(userId: string, movieId: string, status: WatchlistStatus) {
   const supabase = await createServerSupabaseClient();
   if (!supabase) throw new Error("Supabase is not configured.");
   const { error } = await supabase.from("watchlist").update({ status }).eq("user_id", userId).eq("movie_id", movieId);
   if (error) throw new Error(error.message);
-  await logActivity(userId, status === "watched" ? "movie_watched" : "movie_unwatched", movieId);
-  if (status === "watched") await logInteraction(userId, movieId, "watched", "manual");
+  await logActivity(userId, isWatchedStatus(status) ? "movie_watched" : "watchlist_added", movieId);
+  if (isWatchedStatus(status)) await logInteraction(userId, movieId, "watched", "manual");
+}
+
+export async function markWatchedByTmdbId(userId: string, tmdbId: number) {
+  const movie = await upsertMovieByTmdbId(tmdbId);
+  const admin = createAdminClient();
+  const { data: existing } = await admin
+    .from("watchlist")
+    .select("id,status")
+    .eq("user_id", userId)
+    .eq("movie_id", movie.id)
+    .maybeSingle();
+
+  const nextStatus: WatchlistStatus = existing?.status === "want_to_watch" || existing?.status === "watched_watchlist" ? "watched_watchlist" : "watched";
+  const { error } = existing
+    ? await admin.from("watchlist").update({ status: nextStatus }).eq("id", existing.id)
+    : await admin.from("watchlist").insert({ user_id: userId, movie_id: movie.id, status: nextStatus });
+  if (error) throw new Error(error.message);
+  await logActivity(userId, "movie_watched", movie.id, { tmdb_id: tmdbId });
+  await logInteraction(userId, movie.id, "watched", "manual");
+  return movie;
 }
 
 export async function toggleMovieLike(userId: string, tmdbId: number) {

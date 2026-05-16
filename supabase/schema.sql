@@ -76,7 +76,7 @@ create table if not exists public.watchlist (
   id uuid primary key default gen_random_uuid(),
   user_id uuid references public.profiles(id) on delete cascade,
   movie_id uuid references public.movies(id) on delete cascade,
-  status text check (status in ('want_to_watch', 'watched')) default 'want_to_watch',
+  status text check (status in ('want_to_watch', 'watched', 'watched_watchlist')) default 'want_to_watch',
   created_at timestamp with time zone default now(),
   unique(user_id, movie_id)
 );

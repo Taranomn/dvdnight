@@ -12,7 +12,7 @@ export function GroupCard({ id, name }: { id: string; name: string }) {
       </div>
       <div>
         <h3 className="font-bold">{name}</h3>
-        <p className="text-sm text-zinc-400">Compare everyone&apos;s Want to Watch picks</p>
+        <p className="text-sm text-zinc-400">Compare everyone&apos;s Watch List picks</p>
       </div>
     </Link>
   );

@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { Check, Copy, Send, Share2, UserRound, X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { shareMovieToFriendAction } from "@/lib/actions";
 import type { Friendship } from "@/types/friend";
 
@@ -20,6 +21,15 @@ export function ShareMovieButton({
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
 
+  useEffect(() => {
+    if (!open) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [open]);
+
   async function copyLink() {
     await navigator.clipboard.writeText(window.location.href);
     setCopied(true);
@@ -33,7 +43,7 @@ export function ShareMovieButton({
         Share
       </button>
 
-      {open ? (
+      {open && typeof document !== "undefined" ? createPortal(
         <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/70 p-4 backdrop-blur-md">
           <div className="max-h-[min(34rem,calc(100dvh-2rem))] w-full max-w-md overflow-hidden rounded-[1.75rem] border border-white/[0.08] bg-[#0b0f1a] p-4 shadow-2xl shadow-black/70">
             <div className="flex items-start justify-between gap-4">
@@ -102,7 +112,8 @@ export function ShareMovieButton({
               </div>
             ) : null}
           </div>
-        </div>
+        </div>,
+        document.body,
       ) : null}
     </>
   );

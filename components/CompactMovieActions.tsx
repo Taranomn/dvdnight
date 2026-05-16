@@ -30,7 +30,7 @@ export function CompactMovieActions({
 
   useEffect(() => {
     let ignore = false;
-    fetch(`/api/movie-status?tmdbId=${tmdbId}`)
+    fetch(`/api/movie-status?tmdbId=${tmdbId}`, { cache: "no-store", credentials: "same-origin" })
       .then((response) => (response.ok ? response.json() : null))
       .then((payload: MovieStatusPayload | null) => {
         if (ignore || !payload) return;

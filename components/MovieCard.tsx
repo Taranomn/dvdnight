@@ -13,6 +13,8 @@ type MovieCardProps = {
   inWatchlist?: boolean;
   showWatchlistButton?: boolean;
   actionVariant?: "watchlist" | "compact" | "none";
+  initialLiked?: boolean;
+  initialStatus?: string | null;
 };
 
 function getTmdbId(movie: DisplayMovie) {
@@ -31,7 +33,7 @@ function getRotten(movie: DisplayMovie) {
   return "rotten_tomatoes_rating" in movie ? movie.rotten_tomatoes_rating : null;
 }
 
-export function MovieCard({ movie, savedMovieId, inWatchlist, showWatchlistButton = true, actionVariant }: MovieCardProps) {
+export function MovieCard({ movie, savedMovieId, inWatchlist, showWatchlistButton = true, actionVariant, initialLiked, initialStatus }: MovieCardProps) {
   const tmdbId = getTmdbId(movie);
   const poster = posterUrl(movie.poster_path);
   const variant = actionVariant ?? (showWatchlistButton ? "compact" : "none");
@@ -82,7 +84,7 @@ export function MovieCard({ movie, savedMovieId, inWatchlist, showWatchlistButto
             className="mt-3 min-h-10 w-full flex-wrap px-2 py-2 text-[0.7rem] leading-tight"
           />
         ) : null}
-        {variant === "compact" ? <CompactMovieActions tmdbId={tmdbId} /> : null}
+        {variant === "compact" ? <CompactMovieActions tmdbId={tmdbId} initialLiked={initialLiked} initialStatus={initialStatus} /> : null}
       </div>
     </article>
   );

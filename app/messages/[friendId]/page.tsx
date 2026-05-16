@@ -168,19 +168,21 @@ export default async function MessageThreadPage({ params }: { params: Promise<{ 
               <div key={message.id} className={`flex items-end gap-2 ${mine ? "justify-end" : "justify-start"}`}>
                 {!mine ? <MessengerAvatar profile={friend} size="sm" /> : null}
                 <div className={`max-w-[78%] ${mine ? "items-end" : "items-start"} flex flex-col`}>
-                  <div
-                    className={`rounded-[1.6rem] px-5 py-4 text-lg leading-8 shadow-xl ${
-                      mine
-                        ? "rounded-br-md bg-gradient-to-br from-[#ff3b5c] to-[#b8153d] text-white shadow-[#ff3b5c]/20"
-                      : "rounded-bl-md border border-white/10 bg-white/[0.075] text-white shadow-black/30"
-                    }`}
-                  >
-                    {text || (sharedMovie ? "Movie pick" : message.body)}
-                    <span className={`ml-3 whitespace-nowrap text-xs ${mine ? "text-white/70" : "text-zinc-500"}`}>
-                      {formatTime(message.created_at)}
-                      {mine ? " ✓✓" : ""}
-                    </span>
-                  </div>
+                  {text || !sharedMovie ? (
+                    <div
+                      className={`rounded-[1.6rem] px-5 py-4 text-lg leading-8 shadow-xl ${
+                        mine
+                          ? "rounded-br-md bg-gradient-to-br from-[#ff3b5c] to-[#b8153d] text-white shadow-[#ff3b5c]/20"
+                          : "rounded-bl-md border border-white/10 bg-white/[0.075] text-white shadow-black/30"
+                      }`}
+                    >
+                      {text || message.body}
+                      <span className={`ml-3 whitespace-nowrap text-xs ${mine ? "text-white/70" : "text-zinc-500"}`}>
+                        {formatTime(message.created_at)}
+                        {mine ? " ✓✓" : ""}
+                      </span>
+                    </div>
+                  ) : null}
                   {sharedMovie ? <ChatMovieCard movie={sharedMovie} /> : null}
                 </div>
               </div>

@@ -377,11 +377,7 @@ export async function sendWatchlistInviteAction(receiverId: string) {
 export async function shareMovieToFriendAction(receiverId: string, tmdbId: number) {
   const user = await requireUser();
   const movie = await upsertMovieByTmdbId(tmdbId);
-  await sendDirectMessage(
-    user.id,
-    receiverId,
-    `I think we should watch ${movie.title}${movie.release_year ? ` (${movie.release_year})` : ""}.\n/movies/${movie.tmdb_id}`,
-  );
+  await sendDirectMessage(user.id, receiverId, `/movies/${movie.tmdb_id}`);
   revalidatePath(`/messages/${receiverId}`);
   revalidatePath("/messages");
   revalidatePath(`/movies/${tmdbId}`);

@@ -251,20 +251,23 @@ export async function getMessageDebugInfo(userId: string, routeId: string, resol
 
 async function canMessage(senderId: string, receiverId: string) {
   const admin = createAdminClient();
-  const { data: friendship } = await admin
+  const { data: friendships, error: friendshipError } = await admin
     .from("friendships")
     .select("id")
     .or(`and(user_id.eq.${senderId},friend_id.eq.${receiverId}),and(user_id.eq.${receiverId},friend_id.eq.${senderId})`)
-    .maybeSingle();
-  if (friendship) return true;
+    .limit(1);
+  if (friendshipError) throw new Error(friendshipError.message);
+  if (friendships?.length) return true;
 
-  const { data: request } = await admin
+  const { data: requests, error: requestError } = await admin
     .from("friend_requests")
     .select("sender_id, receiver_id")
     .eq("status", "accepted")
     .or(`and(sender_id.eq.${senderId},receiver_id.eq.${receiverId}),and(sender_id.eq.${receiverId},receiver_id.eq.${senderId})`)
-    .maybeSingle();
+    .limit(1);
 
+  if (requestError) throw new Error(requestError.message);
+  const request = requests?.[0];
   if (!request) return false;
 
   await admin

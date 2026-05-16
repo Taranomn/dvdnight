@@ -133,9 +133,6 @@ export default async function ListPage({ params }: { params: Promise<{ slug: str
           dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }}
         />
         <div className="md:hidden">
-          <div className="fixed left-3 top-3 z-[90] rounded-full border border-white/10 bg-black/70 px-3 py-1 text-[0.65rem] font-bold text-white backdrop-blur">
-            Lists debug: {slug} · {movies.length} movies
-          </div>
           <MobilePlaylistBoundary debug={{ slug, categoryCount: mobilePlaylistCategories.length, initialMovieCount: movies.length }}>
             <MobilePlaylistBrowser categories={mobilePlaylistCategories} initialSlug={slug} initialMovies={movies} />
           </MobilePlaylistBoundary>

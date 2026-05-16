@@ -4,8 +4,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { ReactNode, TouchEvent } from "react";
-import { useEffect, useMemo, useRef, useState, useTransition } from "react";
-import { Bookmark, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Heart, Info, Star, ThumbsDown, X } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { Bookmark, ChevronLeft, ChevronRight, Eye, Heart, Star, ThumbsDown, X } from "lucide-react";
 import { addMovieAction, dislikeMovieAction, favoriteMovieAction, toggleMovieLikeAction } from "@/lib/actions";
 import { hasSession } from "@/lib/client-auth";
 import { backdropUrl, cn, formatRating, posterUrl, yearFromDate } from "@/lib/utils";
@@ -66,6 +66,7 @@ export function MobilePlaylistBrowser({ categories, initialSlug, initialMovies }
   });
   const [selectedActions, setSelectedActions] = useState<Record<string, Set<string>>>({});
   const [prompt, setPrompt] = useState<PromptCopy | null>(null);
+  const [overviewOpen, setOverviewOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const touchStart = useRef<{ x: number; y: number } | null>(null);
 
@@ -78,17 +79,17 @@ export function MobilePlaylistBrowser({ categories, initialSlug, initialMovies }
   const actionKey = tmdbId ? `${activeCategory.slug}-${tmdbId}` : activeCategory.slug;
   const selected = selectedActions[actionKey] ?? new Set<string>();
 
-  useEffect(() => {
-    if (loadedPlaylists[activeCategory.slug]) return;
+  const loadPlaylist = useCallback((category: PlaylistCategory) => {
+    if (loadedPlaylists[category.slug]) return;
     let cancelled = false;
-    fetch(`/api/movies?list=${encodeURIComponent(activeCategory.slug)}&page=1`)
+    fetch(`/api/movies?list=${encodeURIComponent(category.slug)}&page=1`)
       .then((response) => response.json())
       .then((payload: { results?: DisplayMovie[] }) => {
         if (cancelled) return;
         setLoadedPlaylists((current) => ({
           ...current,
-          [activeCategory.slug]: {
-            ...activeCategory,
+          [category.slug]: {
+            ...category,
             movies: payload.results ?? [],
           },
         }));
@@ -97,8 +98,8 @@ export function MobilePlaylistBrowser({ categories, initialSlug, initialMovies }
         if (cancelled) return;
         setLoadedPlaylists((current) => ({
           ...current,
-          [activeCategory.slug]: {
-            ...activeCategory,
+          [category.slug]: {
+            ...category,
             movies: [],
           },
         }));
@@ -106,7 +107,22 @@ export function MobilePlaylistBrowser({ categories, initialSlug, initialMovies }
     return () => {
       cancelled = true;
     };
-  }, [activeCategory, loadedPlaylists]);
+  }, [loadedPlaylists]);
+
+  useEffect(() => {
+    const cleanup = loadPlaylist(activeCategory);
+    return cleanup;
+  }, [activeCategory, loadPlaylist]);
+
+  useEffect(() => {
+    const nextIndex = (playlistIndex + 1) % categories.length;
+    const previousIndex = (playlistIndex - 1 + categories.length) % categories.length;
+    const timer = window.setTimeout(() => {
+      loadPlaylist(categories[nextIndex]);
+      loadPlaylist(categories[previousIndex]);
+    }, 120);
+    return () => window.clearTimeout(timer);
+  }, [categories, loadPlaylist, playlistIndex]);
 
   const nearbyMovies = useMemo(() => {
     if (!activeMovies.length) return [];
@@ -118,6 +134,7 @@ export function MobilePlaylistBrowser({ categories, initialSlug, initialMovies }
 
   function moveMovie(direction: 1 | -1) {
     if (!activeMovies.length) return;
+    setOverviewOpen(false);
     setMovieIndexes((current) => ({
       ...current,
       [activeCategory.slug]: (movieIndex + direction + activeMovies.length) % activeMovies.length,
@@ -125,6 +142,7 @@ export function MobilePlaylistBrowser({ categories, initialSlug, initialMovies }
   }
 
   function movePlaylist(direction: 1 | -1) {
+    setOverviewOpen(false);
     setPlaylistIndex((current) => (current + direction + categories.length) % categories.length);
   }
 
@@ -182,11 +200,12 @@ export function MobilePlaylistBrowser({ categories, initialSlug, initialMovies }
       }}
       onTouchEnd={onTouchEnd}
     >
-      {background ? (
-        <Image src={background} alt="" fill priority sizes="100vw" className="object-cover opacity-25 blur-sm scale-105" />
-      ) : null}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,59,92,0.23),transparent_18rem),linear-gradient(180deg,rgba(5,5,10,0.66),#05050a_76%)]" />
-      <div className="relative flex h-full flex-col px-4 pb-4 pt-[calc(env(safe-area-inset-top)+1rem)]">
+      <div
+        className="absolute inset-0 opacity-20 blur-2xl scale-110"
+        style={background ? { backgroundImage: `url(${background})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}
+      />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,59,92,0.23),transparent_18rem),linear-gradient(180deg,rgba(5,5,10,0.48),#05050a_88%)]" />
+      <div className="relative flex h-full flex-col px-4 pb-3 pt-[calc(env(safe-area-inset-top)+0.8rem)]">
         <header className="flex items-center justify-between">
           <button
             type="button"
@@ -205,7 +224,7 @@ export function MobilePlaylistBrowser({ categories, initialSlug, initialMovies }
           </div>
         </header>
 
-        <div className="mt-3 flex items-center justify-center gap-2">
+        <div className="mt-3 flex items-center justify-center gap-1.5">
           {categories.map((category, index) => (
             <button
               key={category.slug}
@@ -220,18 +239,7 @@ export function MobilePlaylistBrowser({ categories, initialSlug, initialMovies }
           ))}
         </div>
 
-        <div className="mt-4 flex items-center justify-between text-xs font-semibold text-zinc-500">
-          <button type="button" onClick={() => movePlaylist(-1)} className="flex items-center gap-1 rounded-full bg-white/[0.05] px-3 py-2 active:scale-95">
-            <ChevronUp className="h-3.5 w-3.5" />
-            Previous shelf
-          </button>
-          <button type="button" onClick={() => movePlaylist(1)} className="flex items-center gap-1 rounded-full bg-white/[0.05] px-3 py-2 active:scale-95">
-            Next shelf
-            <ChevronDown className="h-3.5 w-3.5" />
-          </button>
-        </div>
-
-        <div className="relative mt-4 min-h-0 flex-1">
+        <div className="relative mt-3 min-h-0 flex-1">
           {!activePlaylist ? (
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="h-14 w-14 animate-spin rounded-full border-2 border-white/15 border-t-[#ff3b5c]" />
@@ -258,9 +266,10 @@ export function MobilePlaylistBrowser({ categories, initialSlug, initialMovies }
                             : "z-10 translate-x-[68%] scale-[0.82] opacity-35",
                       )}
                     >
-                      <div
+                      <Link
+                        href={`/movies/${getTmdbId(shelfMovie)}`}
                         className={cn(
-                          "relative aspect-[2/3] overflow-hidden rounded-[2rem] border bg-[#0b0f1a] shadow-2xl transition",
+                          "relative block aspect-[2/3] overflow-hidden rounded-[2rem] border bg-[#0b0f1a] shadow-2xl transition",
                           current ? "border-[#ff3b5c]/50 shadow-[#ff3b5c]/20" : "border-white/10 shadow-black/40",
                         )}
                       >
@@ -269,7 +278,13 @@ export function MobilePlaylistBrowser({ categories, initialSlug, initialMovies }
                         ) : (
                           <div className="flex h-full items-center justify-center p-6 text-center text-sm text-zinc-500">Poster not available</div>
                         )}
-                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black via-black/55 to-transparent p-4">
+                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black via-black/60 to-transparent p-4 pb-5">
+                          <div className="mb-3">
+                            <h2 className="line-clamp-1 text-2xl font-black">{shelfMovie.title}</h2>
+                            <p className="mt-1 text-sm text-zinc-300">
+                              {getYear(shelfMovie) ?? "Year N/A"} · {index + 1} of {activeMovies.length}
+                            </p>
+                          </div>
                           <div className="flex items-center justify-between gap-3 text-sm font-black">
                             <span className="inline-flex items-center gap-1 text-[#f5c518]">
                               <Star className="h-4 w-4 fill-current" />
@@ -281,7 +296,82 @@ export function MobilePlaylistBrowser({ categories, initialSlug, initialMovies }
                             </span>
                           </div>
                         </div>
-                      </div>
+                      </Link>
+                      {current ? (
+                        <>
+                          <div className="absolute right-3 top-1/2 z-30 grid -translate-y-1/2 gap-2">
+                            <ActionButton
+                              active={selected.has("like")}
+                              disabled={isPending}
+                              label="Like"
+                              icon={<Heart className="h-5 w-5" />}
+                              onClick={() =>
+                                runAction("like", () => toggleMovieLikeAction(tmdbId!), {
+                                  title: "Personalize your recommendations",
+                                  description: "Sign in to teach Movie Night what you like.",
+                                  actionLabel: "Sign In",
+                                })
+                              }
+                            />
+                            <ActionButton
+                              active={selected.has("dislike")}
+                              disabled={isPending}
+                              label="No"
+                              icon={<ThumbsDown className="h-5 w-5" />}
+                              onClick={() =>
+                                runAction("dislike", () => dislikeMovieAction(tmdbId!, "explore"), {
+                                  title: "Personalize your recommendations",
+                                  description: "Sign in to teach Movie Night what you do not want to see.",
+                                  actionLabel: "Sign In",
+                                })
+                              }
+                            />
+                            <ActionButton
+                              active={selected.has("want")}
+                              disabled={isPending}
+                              label="Want"
+                              icon={<Bookmark className="h-5 w-5" />}
+                              onClick={() =>
+                                runAction("want", () => addMovieAction(tmdbId!), {
+                                  title: "Save this movie",
+                                  description: "Create an account to save movies you want to watch.",
+                                  actionLabel: "Sign Up",
+                                })
+                              }
+                            />
+                            <ActionButton
+                              active={selected.has("favorite")}
+                              disabled={isPending}
+                              label="Fav"
+                              icon={<Star className="h-5 w-5" />}
+                              onClick={() =>
+                                runAction("favorite", () => favoriteMovieAction(tmdbId!), {
+                                  title: "Save favorites",
+                                  description: "Sign in to keep your favorite movie picks.",
+                                  actionLabel: "Sign In",
+                                })
+                              }
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setOverviewOpen((value) => !value)}
+                              className={cn(
+                                "flex h-14 w-14 flex-col items-center justify-center gap-0.5 rounded-2xl border border-white/15 bg-black/35 text-[0.55rem] font-black text-zinc-200 shadow-xl shadow-black/30 backdrop-blur-xl transition active:scale-95",
+                                overviewOpen && "border-[#ff3b5c]/60 bg-[#ff3b5c]/20 text-white shadow-[0_0_26px_rgba(255,59,92,0.24)]",
+                              )}
+                            >
+                              <Eye className="h-5 w-5" />
+                              Story
+                            </button>
+                          </div>
+                          {overviewOpen ? (
+                            <div className="absolute inset-x-3 bottom-24 z-40 rounded-[1.5rem] border border-white/10 bg-black/70 p-4 text-sm leading-6 text-zinc-100 shadow-2xl shadow-black/60 backdrop-blur-2xl">
+                              <div className="mb-1 text-xs font-black uppercase tracking-[0.18em] text-[#ff3b5c]">Overview</div>
+                              {shelfMovie.overview || activeCategory.description}
+                            </div>
+                          ) : null}
+                        </>
+                      ) : null}
                     </article>
                   );
                 })}
@@ -294,85 +384,9 @@ export function MobilePlaylistBrowser({ categories, initialSlug, initialMovies }
           )}
         </div>
 
-        {movie ? (
-          <footer className="shrink-0 pb-1">
-            <div className="rounded-[1.75rem] border border-white/10 bg-[#0b0f1a]/72 p-4 shadow-2xl shadow-black/50 backdrop-blur-2xl">
-              <div className="flex items-end justify-between gap-4">
-                <div className="min-w-0">
-                  <h2 className="line-clamp-1 text-2xl font-black">{movie.title}</h2>
-                  <p className="mt-1 text-sm text-zinc-400">
-                    {getYear(movie) ?? "Year N/A"} · {movieIndex + 1} of {activeMovies.length}
-                  </p>
-                </div>
-                <Link href={`/movies/${tmdbId}`} className="secondary-button shrink-0 rounded-2xl px-3 py-2 text-xs">
-                  More Info
-                </Link>
-              </div>
-              <p className="mt-3 line-clamp-2 text-sm leading-6 text-zinc-300">{movie.overview || activeCategory.description}</p>
-              <div className="mt-4 grid grid-cols-5 gap-2">
-                <ActionButton
-                  active={selected.has("like")}
-                  disabled={isPending}
-                  label="Like"
-                  icon={<Heart className="h-5 w-5" />}
-                  onClick={() =>
-                    runAction("like", () => toggleMovieLikeAction(tmdbId!), {
-                      title: "Personalize your recommendations",
-                      description: "Sign in to teach Movie Night what you like.",
-                      actionLabel: "Sign In",
-                    })
-                  }
-                />
-                <ActionButton
-                  active={selected.has("dislike")}
-                  disabled={isPending}
-                  label="Dislike"
-                  icon={<ThumbsDown className="h-5 w-5" />}
-                  onClick={() =>
-                    runAction("dislike", () => dislikeMovieAction(tmdbId!, "explore"), {
-                      title: "Personalize your recommendations",
-                      description: "Sign in to teach Movie Night what you do not want to see.",
-                      actionLabel: "Sign In",
-                    })
-                  }
-                />
-                <ActionButton
-                  active={selected.has("want")}
-                  disabled={isPending}
-                  label="Want"
-                  icon={<Bookmark className="h-5 w-5" />}
-                  onClick={() =>
-                    runAction("want", () => addMovieAction(tmdbId!), {
-                      title: "Save this movie",
-                      description: "Create an account to save movies you want to watch.",
-                      actionLabel: "Sign Up",
-                    })
-                  }
-                />
-                <ActionButton
-                  active={selected.has("favorite")}
-                  disabled={isPending}
-                  label="Favorite"
-                  icon={<Star className="h-5 w-5" />}
-                  onClick={() =>
-                    runAction("favorite", () => favoriteMovieAction(tmdbId!), {
-                      title: "Save favorites",
-                      description: "Sign in to keep your favorite movie picks.",
-                      actionLabel: "Sign In",
-                    })
-                  }
-                />
-                <Link
-                  href={`/movies/${tmdbId}`}
-                  className="flex min-h-[4.25rem] flex-col items-center justify-center gap-1 rounded-2xl border border-white/10 bg-white/[0.05] text-[0.64rem] font-bold text-zinc-300 transition active:scale-95"
-                >
-                  <Info className="h-5 w-5" />
-                  Info
-                </Link>
-              </div>
-            </div>
-          </footer>
-        ) : null}
+        <div className="shrink-0 py-1 text-center text-[0.68rem] font-bold text-zinc-500">
+          Swipe sideways for movies · Swipe up/down for shelves · Tap poster for details
+        </div>
       </div>
       <LoginPromptModal
         open={Boolean(prompt)}
@@ -405,7 +419,7 @@ function ActionButton({
       disabled={disabled}
       onClick={onClick}
       className={cn(
-        "flex min-h-[4.25rem] flex-col items-center justify-center gap-1 rounded-2xl border border-white/10 bg-white/[0.05] text-[0.64rem] font-bold text-zinc-300 transition active:scale-95 disabled:opacity-60",
+        "flex h-14 w-14 flex-col items-center justify-center gap-0.5 rounded-2xl border border-white/15 bg-black/35 text-[0.55rem] font-black text-zinc-200 shadow-xl shadow-black/30 backdrop-blur-xl transition active:scale-95 disabled:opacity-60",
         active && "border-[#ff3b5c]/60 bg-[#ff3b5c]/18 text-white shadow-[0_0_26px_rgba(255,59,92,0.24)]",
       )}
     >

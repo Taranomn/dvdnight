@@ -157,8 +157,7 @@ export async function getFriendProfileForMessage(userId: string, friendId: strin
   const { data: friendship } = await admin
     .from("friendships")
     .select("id")
-    .eq("user_id", userId)
-    .eq("friend_id", friendId)
+    .or(`and(user_id.eq.${userId},friend_id.eq.${friendId}),and(user_id.eq.${friendId},friend_id.eq.${userId})`)
     .maybeSingle();
   if (!friendship) return null;
   const { data: profile } = await admin.from("profiles").select("*").eq("id", friendId).maybeSingle();

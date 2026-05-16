@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
+import { EmptyState } from "@/components/EmptyState";
 import { MessengerAvatar } from "@/components/MessengerAvatar";
 import { MessengerComposer } from "@/components/MessengerComposer";
 import { getConversation, getFriendProfileForMessage, markConversationRead } from "@/lib/social";
@@ -14,10 +14,21 @@ export default async function MessageThreadPage({ params }: { params: Promise<{ 
   const user = await requireUser();
   const { friendId } = await params;
   const [friend, messages] = await Promise.all([
-    getFriendProfileForMessage(user.id, friendId),
+    getFriendProfileForMessage(user.id, friendId).catch(() => null),
     getConversation(user.id, friendId).catch(() => []),
   ]);
-  if (!friend) notFound();
+  if (!friend) {
+    return (
+      <div className="mx-auto max-w-3xl px-4 md:px-8">
+        <EmptyState
+          title="Conversation unavailable"
+          message="I could not open this chat. The friend connection may be missing, or the social database migration may not be installed yet."
+          href="/messages"
+          action="Back to messages"
+        />
+      </div>
+    );
+  }
   await markConversationRead(user.id, friendId).catch(() => undefined);
   const name = friend.display_name || friend.username || "Movie friend";
 

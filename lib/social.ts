@@ -152,27 +152,63 @@ export async function getMessageThreads(userId: string) {
   });
 }
 
-export async function getFriendProfileForMessage(userId: string, friendId: string) {
+export async function resolveMessageFriendId(userId: string, routeId: string) {
+  const admin = createAdminClient();
+  const { data: profile } = await admin.from("profiles").select("id").eq("id", routeId).maybeSingle();
+  if (profile?.id) return profile.id as string;
+
+  const { data: friendship } = await admin
+    .from("friendships")
+    .select("user_id, friend_id")
+    .eq("id", routeId)
+    .or(`user_id.eq.${userId},friend_id.eq.${userId}`)
+    .maybeSingle();
+
+  if (!friendship) return routeId;
+  return friendship.user_id === userId ? friendship.friend_id : friendship.user_id;
+}
+
+async function canMessage(senderId: string, receiverId: string) {
   const admin = createAdminClient();
   const { data: friendship } = await admin
     .from("friendships")
     .select("id")
-    .or(`and(user_id.eq.${userId},friend_id.eq.${friendId}),and(user_id.eq.${friendId},friend_id.eq.${userId})`)
+    .or(`and(user_id.eq.${senderId},friend_id.eq.${receiverId}),and(user_id.eq.${receiverId},friend_id.eq.${senderId})`)
     .maybeSingle();
-  if (!friendship) return null;
+  if (friendship) return true;
+
+  const { data: request } = await admin
+    .from("friend_requests")
+    .select("sender_id, receiver_id")
+    .eq("status", "accepted")
+    .or(`and(sender_id.eq.${senderId},receiver_id.eq.${receiverId}),and(sender_id.eq.${receiverId},receiver_id.eq.${senderId})`)
+    .maybeSingle();
+
+  if (!request) return false;
+
+  await admin
+    .from("friendships")
+    .upsert(
+      [
+        { user_id: request.sender_id, friend_id: request.receiver_id },
+        { user_id: request.receiver_id, friend_id: request.sender_id },
+      ],
+      { onConflict: "user_id,friend_id" },
+    )
+    .throwOnError();
+
+  return true;
+}
+
+export async function getFriendProfileForMessage(userId: string, friendId: string) {
+  const admin = createAdminClient();
+  if (!(await canMessage(userId, friendId))) return null;
   const { data: profile } = await admin.from("profiles").select("*").eq("id", friendId).maybeSingle();
   return profile as Profile | null;
 }
 
 async function assertCanMessage(senderId: string, receiverId: string) {
-  const admin = createAdminClient();
-  const { data } = await admin
-    .from("friendships")
-    .select("id")
-    .eq("user_id", senderId)
-    .eq("friend_id", receiverId)
-    .maybeSingle();
-  return Boolean(data);
+  return canMessage(senderId, receiverId);
 }
 
 export async function sendDirectMessage(senderId: string, receiverId: string, body: string) {

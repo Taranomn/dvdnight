@@ -3,7 +3,7 @@ import { ArrowLeft } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
 import { MessengerAvatar } from "@/components/MessengerAvatar";
 import { MessengerComposer } from "@/components/MessengerComposer";
-import { getConversation, getFriendProfileForMessage, markConversationRead } from "@/lib/social";
+import { getConversation, getFriendProfileForMessage, markConversationRead, resolveMessageFriendId } from "@/lib/social";
 import { requireUser } from "@/lib/supabase/server";
 
 function formatTime(value: string) {
@@ -13,9 +13,10 @@ function formatTime(value: string) {
 export default async function MessageThreadPage({ params }: { params: Promise<{ friendId: string }> }) {
   const user = await requireUser();
   const { friendId } = await params;
+  const resolvedFriendId = await resolveMessageFriendId(user.id, friendId).catch(() => friendId);
   const [friend, messages] = await Promise.all([
-    getFriendProfileForMessage(user.id, friendId).catch(() => null),
-    getConversation(user.id, friendId).catch(() => []),
+    getFriendProfileForMessage(user.id, resolvedFriendId).catch(() => null),
+    getConversation(user.id, resolvedFriendId).catch(() => []),
   ]);
   if (!friend) {
     return (
@@ -29,7 +30,7 @@ export default async function MessageThreadPage({ params }: { params: Promise<{ 
       </div>
     );
   }
-  await markConversationRead(user.id, friendId).catch(() => undefined);
+  await markConversationRead(user.id, resolvedFriendId).catch(() => undefined);
   const name = friend.display_name || friend.username || "Movie friend";
 
   return (
@@ -83,7 +84,7 @@ export default async function MessageThreadPage({ params }: { params: Promise<{ 
         </div>
       </main>
 
-      <MessengerComposer friendId={friendId} />
+      <MessengerComposer friendId={resolvedFriendId} />
     </div>
   );
 }

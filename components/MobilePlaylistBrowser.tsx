@@ -175,7 +175,7 @@ export function MobilePlaylistBrowser({ categories, initialSlug, initialMovies }
 
   return (
     <section
-      className="fixed inset-0 z-50 overflow-hidden bg-[#05050a] text-white md:hidden"
+      className="relative z-30 -mt-4 h-[calc(100dvh-5.75rem)] overflow-hidden bg-[#05050a] text-white md:hidden"
       onTouchStart={(event) => {
         const touch = event.touches[0];
         touchStart.current = { x: touch.clientX, y: touch.clientY };
@@ -186,7 +186,7 @@ export function MobilePlaylistBrowser({ categories, initialSlug, initialMovies }
         <Image src={background} alt="" fill priority sizes="100vw" className="object-cover opacity-25 blur-sm scale-105" />
       ) : null}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,59,92,0.23),transparent_18rem),linear-gradient(180deg,rgba(5,5,10,0.66),#05050a_76%)]" />
-      <div className="relative flex h-dvh flex-col px-4 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-[calc(env(safe-area-inset-top)+1rem)]">
+      <div className="relative flex h-full flex-col px-4 pb-4 pt-[calc(env(safe-area-inset-top)+1rem)]">
         <header className="flex items-center justify-between">
           <button
             type="button"

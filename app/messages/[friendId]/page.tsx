@@ -1,9 +1,8 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import { EmptyState } from "@/components/EmptyState";
 import { MessengerAvatar } from "@/components/MessengerAvatar";
 import { MessengerComposer } from "@/components/MessengerComposer";
-import { getConversation, getFriendProfileForMessage, markConversationRead, resolveMessageFriendId } from "@/lib/social";
+import { getConversation, getFriendProfileForMessage, getMessageDebugInfo, markConversationRead, resolveMessageFriendId } from "@/lib/social";
 import { requireUser } from "@/lib/supabase/server";
 
 function formatTime(value: string) {
@@ -19,14 +18,67 @@ export default async function MessageThreadPage({ params }: { params: Promise<{ 
     getConversation(user.id, resolvedFriendId).catch(() => []),
   ]);
   if (!friend) {
+    const debug = await getMessageDebugInfo(user.id, friendId, resolvedFriendId).catch((error) => ({
+      userId: user.id,
+      routeId: friendId,
+      resolvedFriendId,
+      routeProfileExists: false,
+      resolvedProfileExists: false,
+      directFriendshipCount: 0,
+      reverseFriendshipCount: 0,
+      acceptedRequestCount: 0,
+      directMessagesReadable: false,
+      directMessagesCount: 0,
+      errors: [error instanceof Error ? error.message : "Debug lookup failed"],
+    }));
     return (
-      <div className="mx-auto max-w-3xl px-4 md:px-8">
-        <EmptyState
-          title="Conversation unavailable"
-          message="I could not open this chat. The friend connection may be missing, or the social database migration may not be installed yet."
-          href="/messages"
-          action="Back to messages"
-        />
+      <div className="mx-auto max-w-4xl px-4 md:px-8">
+        <div className="rounded-[2rem] border border-[#ff3b5c]/25 bg-[#0b0f1a]/90 p-5 shadow-2xl shadow-black/40 md:p-8">
+          <p className="text-xs font-black uppercase tracking-[0.24em] text-[#ff3b5c]">Chat Debug</p>
+          <h1 className="mt-3 text-3xl font-black">Conversation could not open</h1>
+          <p className="mt-2 text-zinc-400">
+            This is the exact state the app sees for this chat route. Send me a screenshot of this box if it still fails.
+          </p>
+
+          <div className="mt-6 grid gap-3 text-sm sm:grid-cols-2">
+            {[
+              ["Signed-in user", debug.userId],
+              ["Route ID", debug.routeId],
+              ["Resolved friend ID", debug.resolvedFriendId],
+              ["Route ID is a profile", String(debug.routeProfileExists)],
+              ["Resolved profile exists", String(debug.resolvedProfileExists)],
+              ["Friendship user -> friend", String(debug.directFriendshipCount)],
+              ["Friendship friend -> user", String(debug.reverseFriendshipCount)],
+              ["Accepted request rows", String(debug.acceptedRequestCount)],
+              ["direct_messages readable", String(debug.directMessagesReadable)],
+              ["Existing message count", String(debug.directMessagesCount)],
+            ].map(([label, value]) => (
+              <div key={label} className="rounded-2xl border border-white/10 bg-white/[0.04] p-3">
+                <div className="text-xs font-bold uppercase tracking-[0.18em] text-zinc-500">{label}</div>
+                <div className="mt-1 break-all font-mono text-xs text-zinc-200">{value}</div>
+              </div>
+            ))}
+          </div>
+
+          {debug.errors.length ? (
+            <div className="mt-5 rounded-2xl border border-red-400/25 bg-red-500/10 p-4">
+              <div className="text-sm font-bold text-red-200">Database errors</div>
+              <ul className="mt-2 space-y-1 text-sm text-red-100">
+                {debug.errors.map((error) => (
+                  <li key={error}>{error}</li>
+                ))}
+              </ul>
+            </div>
+          ) : (
+            <div className="mt-5 rounded-2xl border border-yellow-400/20 bg-yellow-500/10 p-4 text-sm text-yellow-100">
+              No database error was returned. The likely problem is: zero friendship rows and zero accepted friend request rows between these two user IDs.
+            </div>
+          )}
+
+          <Link href="/messages" className="primary-button mt-6 px-5 py-3">
+            Back to messages
+          </Link>
+        </div>
       </div>
     );
   }

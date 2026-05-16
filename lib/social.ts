@@ -39,6 +39,20 @@ export type MessageThread = {
   unreadCount: number;
 };
 
+export type MessageDebugInfo = {
+  userId: string;
+  routeId: string;
+  resolvedFriendId: string;
+  routeProfileExists: boolean;
+  resolvedProfileExists: boolean;
+  directFriendshipCount: number;
+  reverseFriendshipCount: number;
+  acceptedRequestCount: number;
+  directMessagesReadable: boolean;
+  directMessagesCount: number;
+  errors: string[];
+};
+
 export async function getStoredMovieIdForTmdb(tmdbId: number) {
   const admin = createAdminClient();
   const { data: movie } = await admin.from("movies").select("id").eq("tmdb_id", tmdbId).maybeSingle();
@@ -166,6 +180,73 @@ export async function resolveMessageFriendId(userId: string, routeId: string) {
 
   if (!friendship) return routeId;
   return friendship.user_id === userId ? friendship.friend_id : friendship.user_id;
+}
+
+export async function getMessageDebugInfo(userId: string, routeId: string, resolvedFriendId: string): Promise<MessageDebugInfo> {
+  const admin = createAdminClient();
+  const errors: string[] = [];
+
+  const safeCount = async (label: string, query: PromiseLike<{ count: number | null; error: { message: string } | null }>) => {
+    const result = await query;
+    if (result.error) errors.push(`${label}: ${result.error.message}`);
+    return result.count ?? 0;
+  };
+
+  const safeExists = async (label: string, query: PromiseLike<{ data: unknown; error: { message: string } | null }>) => {
+    const result = await query;
+    if (result.error) errors.push(`${label}: ${result.error.message}`);
+    return Boolean(result.data);
+  };
+
+  const [routeProfileExists, resolvedProfileExists, directFriendshipCount, reverseFriendshipCount, acceptedRequestCount] = await Promise.all([
+    safeExists("route profile lookup", admin.from("profiles").select("id").eq("id", routeId).maybeSingle()),
+    safeExists("resolved profile lookup", admin.from("profiles").select("id").eq("id", resolvedFriendId).maybeSingle()),
+    safeCount(
+      "direct friendship count",
+      admin
+        .from("friendships")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", userId)
+        .eq("friend_id", resolvedFriendId),
+    ),
+    safeCount(
+      "reverse friendship count",
+      admin
+        .from("friendships")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", resolvedFriendId)
+        .eq("friend_id", userId),
+    ),
+    safeCount(
+      "accepted request count",
+      admin
+        .from("friend_requests")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "accepted")
+        .or(`and(sender_id.eq.${userId},receiver_id.eq.${resolvedFriendId}),and(sender_id.eq.${resolvedFriendId},receiver_id.eq.${userId})`),
+    ),
+  ]);
+
+  const { count: directMessagesCount, error: directMessagesError } = await admin
+    .from("direct_messages")
+    .select("id", { count: "exact", head: true })
+    .or(`and(sender_id.eq.${userId},receiver_id.eq.${resolvedFriendId}),and(sender_id.eq.${resolvedFriendId},receiver_id.eq.${userId})`);
+
+  if (directMessagesError) errors.push(`direct_messages read: ${directMessagesError.message}`);
+
+  return {
+    userId,
+    routeId,
+    resolvedFriendId,
+    routeProfileExists,
+    resolvedProfileExists,
+    directFriendshipCount,
+    reverseFriendshipCount,
+    acceptedRequestCount,
+    directMessagesReadable: !directMessagesError,
+    directMessagesCount: directMessagesCount ?? 0,
+    errors,
+  };
 }
 
 async function canMessage(senderId: string, receiverId: string) {

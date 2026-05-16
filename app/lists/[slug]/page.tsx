@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { InfiniteMovieGrid } from "@/components/InfiniteMovieGrid";
+import { MobilePlaylistBoundary } from "@/components/MobilePlaylistBoundary";
 import { MobilePlaylistBrowser } from "@/components/MobilePlaylistBrowser";
 import { discoverMovies, enrichMoviesWithRatings, getImdbRatedMovies, getNowPlayingMovies, getPopularMovies, getTopRatedMovies, getTrendingMovies, getUpcomingMovies } from "@/lib/movies";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
@@ -132,7 +133,12 @@ export default async function ListPage({ params }: { params: Promise<{ slug: str
           dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }}
         />
         <div className="md:hidden">
-          <MobilePlaylistBrowser categories={mobilePlaylistCategories} initialSlug={slug} initialMovies={movies} />
+          <div className="fixed left-3 top-3 z-[90] rounded-full border border-white/10 bg-black/70 px-3 py-1 text-[0.65rem] font-bold text-white backdrop-blur">
+            Lists debug: {slug} · {movies.length} movies
+          </div>
+          <MobilePlaylistBoundary debug={{ slug, categoryCount: mobilePlaylistCategories.length, initialMovieCount: movies.length }}>
+            <MobilePlaylistBrowser categories={mobilePlaylistCategories} initialSlug={slug} initialMovies={movies} />
+          </MobilePlaylistBoundary>
         </div>
         <div className="mx-auto hidden max-w-7xl px-4 md:block md:px-8">
           <h1 className="text-4xl font-black">{builtIn.title}</h1>

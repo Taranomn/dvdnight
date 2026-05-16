@@ -18,16 +18,20 @@ function formatWhen(value?: string | null) {
 
 export default async function MessagesPage() {
   const user = await requireUser();
-  let loadError = false;
-  const threads = await getMessageThreads(user.id).catch(async () => {
-    loadError = true;
+  const threadResult = await getMessageThreads(user.id)
+    .then((threads) => ({ threads, loadError: false }))
+    .catch(async () => {
     const friends = await getFriends(user.id).catch(() => []);
-    return friends.map((friendship) => ({
-      friend: friendship.friend,
-      lastMessage: null,
-      unreadCount: 0,
-    }));
-  });
+      return {
+        loadError: true,
+        threads: friends.map((friendship) => ({
+          friend: friendship.friend,
+          lastMessage: null,
+          unreadCount: 0,
+        })),
+      };
+    });
+  const { threads, loadError } = threadResult;
 
   return (
     <div className="mx-auto min-h-[calc(100dvh-6rem)] max-w-4xl px-4 pb-8 md:px-8">

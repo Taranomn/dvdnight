@@ -13,9 +13,50 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://dvdnight.com";
+
 export const metadata: Metadata = {
-  title: "Movie Night",
-  description: "A cinematic social movie matcher for movie nights.",
+  metadataBase: new URL(siteUrl),
+  applicationName: "Movie Night",
+  title: {
+    default: "Movie Night | Find Movies to Watch Together",
+    template: "%s | Movie Night",
+  },
+  description:
+    "Browse movies, watch trailers, save films to Want to Watch, and match with friends on what to watch together.",
+  keywords: [
+    "movie night",
+    "movie watchlist",
+    "movie recommendations",
+    "watch movies with friends",
+    "movie matcher",
+    "TMDB movies",
+    "IMDb ratings",
+    "Rotten Tomatoes ratings",
+  ],
+  authors: [{ name: "Movie Night" }],
+  creator: "Movie Night",
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    type: "website",
+    url: "/",
+    siteName: "Movie Night",
+    title: "Movie Night | Find Movies to Watch Together",
+    description:
+      "Browse movies, save films to Want to Watch, and match with friends on what to watch together.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Movie Night | Find Movies to Watch Together",
+    description:
+      "A social movie matcher for finding what to watch with friends.",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default function RootLayout({

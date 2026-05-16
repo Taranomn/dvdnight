@@ -1,8 +1,55 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import { notFound } from "next/navigation";
+import { cache } from "react";
 import { SortableFilmography } from "@/components/SortableFilmography";
 import { enrichMoviesWithRatings } from "@/lib/movies";
 import { getPersonDetails, getPersonMovieCredits } from "@/lib/tmdb";
+
+const getPersonForPage = cache(async (personId: number) => getPersonDetails(personId));
+
+export async function generateMetadata({ params }: { params: Promise<{ personId: string }> }): Promise<Metadata> {
+  const { personId } = await params;
+  const id = Number(personId);
+  if (!Number.isFinite(id)) {
+    return {
+      title: "Person Not Found",
+    };
+  }
+
+  try {
+    const person = await getPersonForPage(id);
+    const description =
+      person.biography?.slice(0, 155) ||
+      `Browse ${person.name}'s movies, credits, and IMDb-rated filmography on Movie Night.`;
+    const imageUrl = person.profile_path ? `https://image.tmdb.org/t/p/w500${person.profile_path}` : undefined;
+
+    return {
+      title: `${person.name} Movies and Credits`,
+      description,
+      alternates: {
+        canonical: `/people/${id}`,
+      },
+      openGraph: {
+        title: `${person.name} Movies and Credits`,
+        description,
+        url: `/people/${id}`,
+        siteName: "Movie Night",
+        images: imageUrl ? [{ url: imageUrl, width: 500, height: 750 }] : undefined,
+      },
+      twitter: {
+        card: imageUrl ? "summary_large_image" : "summary",
+        title: `${person.name} Movies and Credits`,
+        description,
+        images: imageUrl ? [imageUrl] : undefined,
+      },
+    };
+  } catch {
+    return {
+      title: "Person Not Found",
+    };
+  }
+}
 
 export default async function PersonPage({
   params,
@@ -13,7 +60,7 @@ export default async function PersonPage({
   const id = Number(personId);
   if (!Number.isFinite(id)) notFound();
 
-  const [person, credits] = await Promise.all([getPersonDetails(id), getPersonMovieCredits(id)]);
+  const [person, credits] = await Promise.all([getPersonForPage(id), getPersonMovieCredits(id)]);
   const allCredits = [
     ...credits.cast.map((credit) => ({ ...credit, creditType: "Acting" })),
     ...credits.crew.map((credit) => ({ ...credit, creditType: credit.job ?? "Crew" })),

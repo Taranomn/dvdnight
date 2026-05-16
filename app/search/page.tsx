@@ -1,7 +1,17 @@
+import type { Metadata } from "next";
 import { LiveMovieSearch } from "@/components/LiveMovieSearch";
 import { enrichMoviesWithRatings, getImdbRatedMovies, searchMovies } from "@/lib/movies";
 import { getGenres } from "@/lib/tmdb";
 import type { DisplayMovie } from "@/types/movie";
+
+export const metadata: Metadata = {
+  title: "Search Movies",
+  description:
+    "Search movies, cast, directors, genres, years, and ratings with live results on Movie Night.",
+  alternates: {
+    canonical: "/search",
+  },
+};
 
 export default async function SearchPage({ searchParams }: { searchParams: Promise<{ q?: string; genre?: string }> }) {
   const { q = "", genre = "" } = await searchParams;

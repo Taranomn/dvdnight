@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
-import { Clapperboard, Compass, Heart, Home, ListMusic, MessageCircle, MoreHorizontal, Search, Settings, Shuffle, UserRound, Users, type LucideIcon } from "lucide-react";
+import { useState } from "react";
+import { Clapperboard, Compass, Heart, Home, Menu, MessageCircle, MoreHorizontal, Search, Settings, Shuffle, Star, TrendingUp, UserRound, Users, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type NavItem = {
@@ -23,7 +23,6 @@ const desktopItems: NavItem[] = [
 ];
 
 const desktopMoreItems: NavItem[] = [
-  { href: "/playlists", label: "Playlists", icon: ListMusic },
   { href: "/messages", label: "Messages", icon: MessageCircle },
   { href: "/match", label: "Match", icon: Shuffle },
   { href: "/groups", label: "Groups", icon: Clapperboard },
@@ -38,13 +37,24 @@ const mobileItems: NavItem[] = [
 ];
 
 const mobileMoreItems: NavItem[] = [
-  { href: "/playlists", label: "Playlists", icon: ListMusic },
   { href: "/friends", label: "Friends", icon: Users },
   { href: "/messages", label: "Messages", icon: MessageCircle },
   { href: "/match", label: "Match", icon: Shuffle },
   { href: "/groups", label: "Groups", icon: Clapperboard },
   { href: "/profile", label: "Profile", icon: UserRound },
   { href: "/admin", label: "Admin", icon: Settings, adminOnly: true },
+];
+
+const browseItems: NavItem[] = [
+  { href: "/lists/now-playing", label: "Latest in Theaters", icon: Clapperboard },
+  { href: "/lists/trending", label: "Trending Now", icon: TrendingUp },
+  { href: "/lists/popular", label: "Popular Movies", icon: Star },
+  { href: "/lists/top-rated", label: "Top Rated", icon: Star },
+  { href: "/lists/imdb-top-250", label: "IMDb-Rated Essentials", icon: Star },
+  { href: "/lists/rotten-favorites", label: "Critic Favorites", icon: Star },
+  { href: "/lists/modern-classics", label: "Modern Classics", icon: Clapperboard },
+  { href: "/lists/cult-night", label: "Cult Movie Night", icon: Clapperboard },
+  { href: "/lists/upcoming", label: "Coming Soon", icon: Clapperboard },
 ];
 
 function isActive(pathname: string, href: string) {
@@ -56,6 +66,8 @@ export function DesktopNavItems({ isAdmin = false }: { isAdmin?: boolean }) {
   const pathname = usePathname();
   const visibleItems = desktopItems.filter((item) => !item.adminOnly || isAdmin);
   const visibleMoreItems = desktopMoreItems.filter((item) => !item.adminOnly || isAdmin);
+  const browseActive = browseItems.some((item) => isActive(pathname, item.href));
+  const [browseOpen, setBrowseOpen] = useState(browseActive);
   const [moreOpen, setMoreOpen] = useState(visibleMoreItems.some((item) => isActive(pathname, item.href)));
   const moreActive = visibleMoreItems.some((item) => isActive(pathname, item.href));
   return (
@@ -77,6 +89,46 @@ export function DesktopNavItems({ isAdmin = false }: { isAdmin?: boolean }) {
           </Link>
         );
       })}
+      <div
+        onMouseEnter={() => setBrowseOpen(true)}
+        onMouseLeave={() => {
+          if (!browseActive) setBrowseOpen(false);
+        }}
+      >
+        <button
+          type="button"
+          onClick={() => setBrowseOpen((value) => !value)}
+          className={cn(
+            "group flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold text-zinc-300 transition duration-200 hover:-translate-y-0.5 hover:bg-white/[0.06] hover:text-white",
+            (browseOpen || browseActive) && "bg-white/[0.06] text-white",
+          )}
+          aria-expanded={browseOpen}
+        >
+          <Menu className="h-4 w-4 transition group-hover:scale-110" />
+          Browse
+        </button>
+        {browseOpen ? (
+          <div className="mt-2 max-h-72 space-y-1 overflow-y-auto rounded-2xl border border-white/10 bg-white/[0.03] p-2">
+            {browseItems.map((item) => {
+              const Icon = item.icon;
+              const active = isActive(pathname, item.href);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={cn(
+                    "flex items-center gap-3 rounded-xl px-3 py-2 text-xs font-semibold text-zinc-400 transition hover:bg-white/[0.06] hover:text-white",
+                    active && "bg-[#ff3b5c]/15 text-[#ff3b5c]",
+                  )}
+                >
+                  <Icon className={cn("h-4 w-4", active && "fill-current")} />
+                  {item.label}
+                </Link>
+              );
+            })}
+          </div>
+        ) : null}
+      </div>
       <button
         type="button"
         onClick={() => setMoreOpen((value) => !value)}
@@ -117,16 +169,35 @@ export function MobileNavItems({ isAdmin = false }: { isAdmin?: boolean }) {
   const pathname = usePathname();
   const [moreOpen, setMoreOpen] = useState(false);
   const visibleMoreItems = mobileMoreItems.filter((item) => !item.adminOnly || isAdmin);
-  const moreActive = visibleMoreItems.some((item) => isActive(pathname, item.href));
-
-  useEffect(() => {
-    setMoreOpen(false);
-  }, [pathname]);
+  const browseActive = browseItems.some((item) => isActive(pathname, item.href));
+  const moreActive = visibleMoreItems.some((item) => isActive(pathname, item.href)) || browseActive;
 
   return (
     <div className="relative">
       {moreOpen ? (
-        <div className="absolute bottom-[calc(100%+0.7rem)] right-0 w-56 rounded-3xl border border-white/10 bg-[#0b0f1a]/95 p-2 shadow-2xl shadow-black/60 backdrop-blur-2xl">
+        <div className="absolute bottom-[calc(100%+0.7rem)] right-0 max-h-[70dvh] w-72 overflow-y-auto rounded-3xl border border-white/10 bg-[#0b0f1a]/95 p-2 shadow-2xl shadow-black/60 backdrop-blur-2xl">
+          <div className="px-3 py-2 text-xs font-bold uppercase tracking-[0.2em] text-zinc-500">Movie Shelves</div>
+          <div className="grid gap-1">
+            {browseItems.map((item) => {
+              const Icon = item.icon;
+              const active = isActive(pathname, item.href);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setMoreOpen(false)}
+                  className={cn(
+                    "flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-semibold text-zinc-300 transition hover:bg-white/[0.06] hover:text-white",
+                    active && "bg-[#ff3b5c]/15 text-[#ff3b5c]",
+                  )}
+                >
+                  <Icon className={cn("h-4 w-4", active && "fill-current")} />
+                  {item.label}
+                </Link>
+              );
+            })}
+          </div>
+          <div className="mt-2 px-3 py-2 text-xs font-bold uppercase tracking-[0.2em] text-zinc-500">Social</div>
           <div className="grid gap-1">
             {visibleMoreItems.map((item) => {
               const Icon = item.icon;

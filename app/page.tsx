@@ -1,9 +1,19 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Bell } from "lucide-react";
 import { MovieGrid } from "@/components/MovieGrid";
 import { MovieSearchBar } from "@/components/MovieSearchBar";
 import { enrichMoviesWithRatings, getNowPlayingMovies, getPopularMovies, getTopRatedMovies, getTrendingMovies } from "@/lib/movies";
 import type { DisplayMovie, MovieSummary } from "@/types/movie";
+
+export const metadata: Metadata = {
+  title: "Movie Night | Social Movie Watchlists and Matching",
+  description:
+    "Browse trending movies, see IMDb and Rotten Tomatoes ratings, save films to Want to Watch, and match with friends on what to watch together.",
+  alternates: {
+    canonical: "/",
+  },
+};
 
 async function safeMovies(loader: () => Promise<MovieSummary[]>) {
   try {

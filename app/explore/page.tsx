@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { EmptyState } from "@/components/EmptyState";
 import { ExploreModes } from "@/components/ExploreModes";
@@ -8,6 +9,15 @@ import { getExploreRecommendations } from "@/lib/explore";
 import { enrichMoviesWithRatings, getPopularMovies, getTopRatedMovies, getTrendingMovies, getUpcomingMovies } from "@/lib/movies";
 import { createServerSupabaseClient, getSessionUser } from "@/lib/supabase/server";
 import { getLikedMovies, getUserWatchlist } from "@/lib/watchlist";
+
+export const metadata: Metadata = {
+  title: "Explore Movie Recommendations",
+  description:
+    "Discover movie recommendations, trending picks, hidden gems, and personalized films based on your taste on Movie Night.",
+  alternates: {
+    canonical: "/explore",
+  },
+};
 
 export default async function ExplorePage({ searchParams }: { searchParams: Promise<{ refresh?: string }> }) {
   const { refresh = "" } = await searchParams;

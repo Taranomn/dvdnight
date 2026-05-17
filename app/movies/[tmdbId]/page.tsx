@@ -10,7 +10,7 @@ import { MovieDetailTabs } from "@/components/MovieDetailTabs";
 import { ShareMovieButton } from "@/components/ShareMovieButton";
 import { SimilarMoviesPanel } from "@/components/SimilarMoviesPanel";
 import { getFriends } from "@/lib/friends";
-import { enrichMoviesWithRatings, getFullMovieData, getStoredMovieByTmdbId } from "@/lib/movies";
+import { enrichMoviesWithRatings, getFullMovieData } from "@/lib/movies";
 import { getMovieComments, getMovieCommunityStats } from "@/lib/social";
 import { getSessionUser } from "@/lib/supabase/server";
 import { getSmartSimilarMovies } from "@/lib/tmdb";
@@ -74,15 +74,6 @@ export default async function MovieDetailPage({ params }: { params: Promise<{ tm
   let movie;
   try {
     movie = await getMovieForPage(id);
-    const storedMovie = await getStoredMovieByTmdbId(id).catch(() => null);
-    if (storedMovie) {
-      movie = {
-        ...movie,
-        imdb_id: movie.imdb_id ?? storedMovie.imdb_id,
-        imdb_rating: movie.imdb_rating ?? storedMovie.imdb_rating,
-        rotten_tomatoes_rating: movie.rotten_tomatoes_rating ?? storedMovie.rotten_tomatoes_rating,
-      };
-    }
   } catch {
     return (
       <div className="mx-auto max-w-7xl px-4 md:px-8">

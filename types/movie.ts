@@ -90,6 +90,8 @@ export type FullMovieData = {
 
 export type StoredMovie = Omit<FullMovieData, "cast" | "crew" | "director" | "images"> & {
   id: string;
+  movie_cast?: CastMember[] | null;
+  movie_crew?: CrewMember[] | null;
   created_at?: string;
   updated_at?: string;
 };

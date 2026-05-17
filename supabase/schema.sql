@@ -51,6 +51,8 @@ create table if not exists public.movies (
   popularity numeric,
   adult boolean default false,
   trailer_key text,
+  movie_cast jsonb,
+  movie_crew jsonb,
   created_at timestamp with time zone default now(),
   updated_at timestamp with time zone default now()
 );
@@ -71,6 +73,8 @@ alter table public.movies add column if not exists original_language text;
 alter table public.movies add column if not exists tmdb_vote_count integer;
 alter table public.movies add column if not exists popularity numeric;
 alter table public.movies add column if not exists adult boolean default false;
+alter table public.movies add column if not exists movie_cast jsonb;
+alter table public.movies add column if not exists movie_crew jsonb;
 
 create table if not exists public.watchlist (
   id uuid primary key default gen_random_uuid(),

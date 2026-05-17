@@ -97,10 +97,12 @@ export async function logoutAction() {
 
 export async function addMovieAction(tmdbId: number) {
   const user = await requireUser();
-  await addToWatchlist(user.id, tmdbId);
+  const movie = await addToWatchlist(user.id, tmdbId);
   revalidatePath("/");
   revalidatePath(`/movies/${tmdbId}`);
   revalidatePath("/watchlist");
+  revalidatePath("/explore");
+  return { movieId: movie.id as string };
 }
 
 export async function removeMovieAction(movieId: string, tmdbId?: number) {
@@ -120,10 +122,11 @@ export async function setWatchlistStatusAction(movieId: string, status: Watchlis
 
 export async function markWatchedByTmdbAction(tmdbId: number) {
   const user = await requireUser();
-  await markWatchedByTmdbId(user.id, tmdbId);
+  const movie = await markWatchedByTmdbId(user.id, tmdbId);
   revalidatePath("/watchlist");
   revalidatePath("/explore");
   revalidatePath(`/movies/${tmdbId}`);
+  return { movieId: movie.id as string };
 }
 
 export async function toggleMovieLikeAction(tmdbId: number) {

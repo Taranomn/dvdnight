@@ -55,6 +55,7 @@ export function MovieGrid({ movies, showWatchlistButton = true, actionVariant = 
             actionVariant={actionVariant}
             initialLiked={status?.liked}
             initialStatus={status?.watchlist?.status}
+            initialMovieId={status?.watchlist?.movie_id}
           />
         );
       })}

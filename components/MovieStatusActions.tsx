@@ -1,8 +1,9 @@
 "use client";
 
 import { Bookmark, Heart, CheckCircle2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { addMovieAction, markWatchedByTmdbAction, setWatchlistStatusAction, toggleMovieLikeAction } from "@/lib/actions";
+import { addMovieAction, markWatchedByTmdbAction, removeMovieAction, setWatchlistStatusAction, toggleMovieLikeAction } from "@/lib/actions";
 import { cn } from "@/lib/utils";
 import { hasSession } from "@/lib/client-auth";
 import { LoginPromptModal } from "@/components/LoginPromptModal";
@@ -15,8 +16,10 @@ type MovieStatusActionsProps = {
 };
 
 export function MovieStatusActions({ tmdbId, movieId, status, liked }: MovieStatusActionsProps) {
+  const router = useRouter();
   const [isLiked, setIsLiked] = useState(Boolean(liked));
   const [currentStatus, setCurrentStatus] = useState<string | null>(status ?? null);
+  const [currentMovieId, setCurrentMovieId] = useState<string | null>(movieId ?? null);
   const [isPending, startTransition] = useTransition();
   const [prompt, setPrompt] = useState<{ title: string; description: string; actionLabel: string } | null>(null);
   const isWatched = currentStatus === "watched" || currentStatus === "watched_watchlist";
@@ -39,6 +42,7 @@ export function MovieStatusActions({ tmdbId, movieId, status, liked }: MovieStat
             }
             await toggleMovieLikeAction(tmdbId);
             setIsLiked((value) => !value);
+            router.refresh();
           });
         }}
       >
@@ -58,8 +62,17 @@ export function MovieStatusActions({ tmdbId, movieId, status, liked }: MovieStat
               });
               return;
             }
-            await addMovieAction(tmdbId);
+            if (isInWatchlist && currentMovieId) {
+              await removeMovieAction(currentMovieId, tmdbId);
+              setCurrentStatus(isWatched ? "watched" : null);
+              if (!isWatched) setCurrentMovieId(null);
+              router.refresh();
+              return;
+            }
+            const result = await addMovieAction(tmdbId);
+            setCurrentMovieId(result.movieId);
             setCurrentStatus(isWatched ? "watched_watchlist" : "want_to_watch");
+            router.refresh();
           });
         }}
       >
@@ -79,14 +92,28 @@ export function MovieStatusActions({ tmdbId, movieId, status, liked }: MovieStat
               });
               return;
             }
-            if (movieId) {
+            if (isWatched && currentMovieId) {
+              if (isInWatchlist) {
+                await setWatchlistStatusAction(currentMovieId, "want_to_watch", tmdbId);
+                setCurrentStatus("want_to_watch");
+              } else {
+                await removeMovieAction(currentMovieId, tmdbId);
+                setCurrentStatus(null);
+                setCurrentMovieId(null);
+              }
+              router.refresh();
+              return;
+            }
+            if (currentMovieId) {
               const nextStatus = isInWatchlist ? "watched_watchlist" : "watched";
-              await setWatchlistStatusAction(movieId, nextStatus, tmdbId);
+              await setWatchlistStatusAction(currentMovieId, nextStatus, tmdbId);
               setCurrentStatus(nextStatus);
             } else {
-              await markWatchedByTmdbAction(tmdbId);
-              setCurrentStatus("watched");
+              const result = await markWatchedByTmdbAction(tmdbId);
+              setCurrentMovieId(result.movieId);
+              setCurrentStatus(isInWatchlist ? "watched_watchlist" : "watched");
             }
+            router.refresh();
           });
         }}
       >

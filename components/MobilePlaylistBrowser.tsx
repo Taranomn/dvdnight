@@ -168,7 +168,7 @@ export function MobilePlaylistBrowser({ categories, initialSlug, initialMovies }
     });
   }
 
-  function runAction(name: string, action: () => Promise<void>, promptCopy: PromptCopy) {
+  function runAction(name: string, action: () => Promise<unknown>, promptCopy: PromptCopy) {
     if (!tmdbId) return;
     startTransition(async () => {
       if (!(await hasSession())) {

@@ -9,7 +9,6 @@ type OmdbResponse = {
   Ratings?: OmdbRating[];
   imdbRating?: string;
   Response?: string;
-  Error?: string;
 };
 
 export async function getOmdbRatings(imdbId: string) {
@@ -21,16 +20,10 @@ export async function getOmdbRatings(imdbId: string) {
   url.searchParams.set("apikey", apiKey);
 
   const response = await fetch(url, { next: { revalidate: 60 * 60 * 24 } });
-  if (!response.ok) {
-    console.warn(`OMDb request failed for ${imdbId} with status ${response.status}.`);
-    return { imdbRating: null, rottenTomatoesRating: null };
-  }
+  if (!response.ok) return { imdbRating: null, rottenTomatoesRating: null };
 
   const data = (await response.json()) as OmdbResponse;
-  if (data.Response === "False") {
-    console.warn(`OMDb returned no ratings for ${imdbId}${data.Error ? `: ${data.Error}` : ""}.`);
-    return { imdbRating: null, rottenTomatoesRating: null };
-  }
+  if (data.Response === "False") return { imdbRating: null, rottenTomatoesRating: null };
 
   const imdbValue =
     data.Ratings?.find((rating) => rating.Source === "Internet Movie Database")?.Value?.split("/")[0] ??
